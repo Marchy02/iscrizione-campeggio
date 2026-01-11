@@ -331,6 +331,32 @@
 
         if (inscriptionError) throw inscriptionError;
 
+                // 📧 Invio email automatica
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: formData.email,
+              subject: formData.status === 'CONFIRMED'
+                ? 'Iscrizione confermata!'
+                : 'Inserito in lista d\'attesa',
+              type: formData.status === 'CONFIRMED' ? 'CONFERMA' : 'LISTA_ATTESA',
+              data: {
+                nome: formData.nome,
+                cognome: formData.cognome,
+                turno_nome: turnoData.nome,
+                date: `${turnoData.data_inizio} - ${turnoData.data_fine}`,
+                luogo: turnoData.luogo,
+                posizione: formData.posizione_lista
+              }
+            }
+          });
+
+          console.log('📧 Email inviata con successo');
+        } catch (mailError) {
+          console.error('❌ Errore invio email:', mailError);
+        }
+
+
         // Mostra modal successo
         const modal = document.getElementById('success-modal');
         const modalTitle = document.getElementById('modal-title');
