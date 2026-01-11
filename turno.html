@@ -1,236 +1,359 @@
-// ⚠️ SOSTITUISCI QUESTI VALORI CON I TUOI
-const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iscrizione Campeggio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <a href="index.html" class="back-button">← Torna ai turni</a>
+        <h1>🏕️ Iscrizione Campeggio</h1>
+      </div>
+    </header>
 
-// Import Supabase
-//import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <main class="main-content">
+      <div id="turno-info" class="turno-info-card">
+        <!-- Info turno caricate dinamicamente -->
+      </div>
 
-// Variabili globali
-let turnoId = null;
-let turnoData = null;
+      <form id="iscrizione-form" class="iscrizione-form">
+        <!-- DATI PARTECIPANTE -->
+        <div class="form-section">
+          <h3>👤 Dati Partecipante</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome">Nome *</label>
+              <input type="text" id="nome" name="nome" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="cognome">Cognome *</label>
+              <input type="text" id="cognome" name="cognome" required>
+            </div>
+          </div>
 
-// Inizializzazione
-async function init() {
-  try {
-    console.log('✅ Supabase inizializzato');
-    await caricaTurno();
-    setupEventListeners();
-  } catch (error) {
-    console.error('❌ Errore inizializzazione:', error);
-    alert('Errore di connessione. Riprova più tardi.');
-    window.location.href = 'index.html';
-  }
-}
+          <div class="form-row">
+            <div class="form-group">
+              <label for="data_nascita">Data di nascita *</label>
+              <input type="date" id="data_nascita" name="data_nascita" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="luogo_nascita">Luogo di nascita *</label>
+              <input type="text" id="luogo_nascita" name="luogo_nascita" required>
+            </div>
+          </div>
 
-// Caricamento turno
-async function caricaTurno() {
-  const params = new URLSearchParams(window.location.search);
-  turnoId = params.get('id');
+          <div class="form-group">
+            <label for="residenza_via">Residenza - Via e numero civico *</label>
+            <input type="text" id="residenza_via" name="residenza_via" required>
+          </div>
 
-  if (!turnoId) {
-    console.error('❌ ID turno mancante');
-    window.location.href = 'index.html';
-    return;
-  }
+          <div class="form-group">
+            <label for="residenza_citta">Città di residenza *</label>
+            <input type="text" id="residenza_citta" name="residenza_citta" required>
+          </div>
 
-  console.log('🔄 Caricamento turno ID:', turnoId);
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="maggiorenne" name="maggiorenne">
+              <span>Sono maggiorenne (ho compiuto 18 anni)</span>
+            </label>
+          </div>
+        </div>
 
-  try {
-    const { data, error } = await supabase
-      .from('turni')
-      .select('*')
-      .eq('id', turnoId)
-      .single();
+        <!-- DATI GENITORE (se minorenne) -->
+        <div id="genitore-section" class="form-section" style="display: none;">
+          <h3>👨‍👩‍👧 Dati Genitore/Tutore</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="genitore_nome">Nome genitore *</label>
+              <input type="text" id="genitore_nome" name="genitore_nome">
+            </div>
+            
+            <div class="form-group">
+              <label for="genitore_cognome">Cognome genitore *</label>
+              <input type="text" id="genitore_cognome" name="genitore_cognome">
+            </div>
+          </div>
+        </div>
 
-    if (error) {
-      console.error('❌ Errore query turno:', error);
-      throw error;
-    }
-    
-    console.log('✅ Turno caricato:', data);
-    turnoData = data;
-    mostraInfoTurno(data);
-  } catch (error) {
-    console.error('❌ Errore caricamento turno:', error);
-    alert('Errore nel caricamento del turno: ' + error.message);
-    window.location.href = 'index.html';
-  }
-}
+        <!-- CONTATTI -->
+        <div class="form-section">
+          <h3>📧 Contatti</h3>
+          
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+            <small>Riceverai la conferma di iscrizione a questo indirizzo</small>
+          </div>
 
-function mostraInfoTurno(turno) {
-  const postiDisponibili = turno.posti_totali - turno.posti_occupati;
-  const infoDiv = document.getElementById('turno-info');
-  
-  const dataInizio = new Date(turno.data_inizio + 'T00:00:00').toLocaleDateString('it-IT', { 
-    day: 'numeric', 
-    month: 'long' 
-  });
-  const dataFine = new Date(turno.data_fine + 'T00:00:00').toLocaleDateString('it-IT', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
+          <div class="form-group">
+            <label for="telefono">Telefono *</label>
+            <input type="tel" id="telefono" name="telefono" required>
+          </div>
+        </div>
 
-  let statusHTML = '';
-  if (postiDisponibili > 0) {
-    statusHTML = `<span class="status-badge available">✓ ${postiDisponibili} posti disponibili</span>`;
-  } else {
-    statusHTML = `<span class="status-badge waiting">Lista d'attesa</span>`;
-  }
+        <!-- DATI SANITARI -->
+        <div class="form-section">
+          <h3>🏥 Dati Sanitari</h3>
+          
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="ha_allergie" name="ha_allergie">
+              <span>Ha allergie o patologie</span>
+            </label>
+          </div>
 
-  infoDiv.innerHTML = `
-    <h2>${turno.nome}</h2>
-    <p class="turno-date">📅 ${dataInizio} - ${dataFine}</p>
-    <p class="turno-location">📍 ${turno.luogo}</p>
-    ${statusHTML}
-  `;
-}
+          <div id="allergie-desc-group" class="form-group" style="display: none;">
+            <label for="allergie_desc">Descrizione allergie/patologie</label>
+            <textarea id="allergie_desc" name="allergie_desc" rows="3"></textarea>
+          </div>
 
-// Setup event listeners
-function setupEventListeners() {
-  // Maggiorenne toggle
-  document.getElementById('maggiorenne').addEventListener('change', function() {
-    const genitoreSection = document.getElementById('genitore-section');
-    const genitoreNome = document.getElementById('genitore_nome');
-    const genitoreCognome = document.getElementById('genitore_cognome');
-    
-    if (this.checked) {
-      genitoreSection.style.display = 'none';
-      genitoreNome.removeAttribute('required');
-      genitoreCognome.removeAttribute('required');
-    } else {
-      genitoreSection.style.display = 'block';
-      genitoreNome.setAttribute('required', 'required');
-      genitoreCognome.setAttribute('required', 'required');
-    }
-  });
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="assume_medicinali" name="assume_medicinali">
+              <span>Assume medicinali</span>
+            </label>
+          </div>
 
-  // Allergie toggle
-  document.getElementById('ha_allergie').addEventListener('change', function() {
-    document.getElementById('allergie-desc-group').style.display = this.checked ? 'block' : 'none';
-  });
+          <div id="medicinali-desc-group" class="form-group" style="display: none;">
+            <label for="medicinali_desc">Descrizione medicinali e posologia</label>
+            <textarea id="medicinali_desc" name="medicinali_desc" rows="3"></textarea>
+          </div>
+        </div>
 
-  // Medicinali toggle
-  document.getElementById('assume_medicinali').addEventListener('change', function() {
-    document.getElementById('medicinali-desc-group').style.display = this.checked ? 'block' : 'none';
-  });
+        <!-- GDPR -->
+        <div class="form-section">
+          <h3>🔒 Consenso Privacy</h3>
+          
+          <div class="form-group checkbox-group">
+            <label class="gdpr-label">
+              <input type="checkbox" id="consenso_gdpr" name="consenso_gdpr" required>
+              <span>
+                Acconsento al trattamento dei dati personali secondo quanto previsto dal Regolamento UE 2016/679 (GDPR). 
+                I dati saranno utilizzati esclusivamente per la gestione dell'iscrizione al campeggio estivo. *
+              </span>
+            </label>
+          </div>
+        </div>
 
-  // Form submit
-  document.getElementById('iscrizione-form').addEventListener('submit', handleSubmit);
-}
+        <div class="form-actions">
+          <button type="submit" id="submit-btn" class="btn-primary">
+            Conferma Iscrizione
+          </button>
+        </div>
 
-// Submit form
-async function handleSubmit(e) {
-  e.preventDefault();
+        <div id="form-error" class="error-message" style="display: none;"></div>
+      </form>
+    </main>
 
-  const submitBtn = document.getElementById('submit-btn');
-  const errorDiv = document.getElementById('form-error');
-  
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Invio in corso...';
-  errorDiv.style.display = 'none';
+    <footer class="footer">
+      <p>Per informazioni: campeggi@parrocchia.it | Tel: 0123 456789</p>
+    </footer>
+  </div>
 
-  const formData = {
-    turno_id: parseInt(turnoId),
-    nome: document.getElementById('nome').value.trim(),
-    cognome: document.getElementById('cognome').value.trim(),
-    data_nascita: document.getElementById('data_nascita').value,
-    luogo_nascita: document.getElementById('luogo_nascita').value.trim(),
-    residenza_via: document.getElementById('residenza_via').value.trim(),
-    residenza_citta: document.getElementById('residenza_citta').value.trim(),
-    maggiorenne: document.getElementById('maggiorenne').checked,
-    genitore_nome: document.getElementById('genitore_nome').value.trim() || null,
-    genitore_cognome: document.getElementById('genitore_cognome').value.trim() || null,
-    email: document.getElementById('email').value.trim(),
-    telefono: document.getElementById('telefono').value.trim(),
-    ha_allergie: document.getElementById('ha_allergie').checked,
-    allergie_desc: document.getElementById('allergie_desc').value.trim() || null,
-    assume_medicinali: document.getElementById('assume_medicinali').checked,
-    medicinali_desc: document.getElementById('medicinali_desc').value.trim() || null,
-    consenso_gdpr: document.getElementById('consenso_gdpr').checked
-  };
+  <div id="success-modal" class="modal" style="display: none;">
+    <div class="modal-content success-modal">
+      <div class="modal-icon">✅</div>
+      <h2 id="modal-title">Iscrizione confermata!</h2>
+      <p id="modal-message">Riceverai una email di conferma all'indirizzo indicato.</p>
+      <button onclick="window.location.href='index.html'" class="btn-primary">Torna alla home</button>
+    </div>
+  </div>
 
-  console.log('📤 Invio iscrizione:', formData);
+  <script type="module">
+    // Configurazione Supabase
+    const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
 
-  try {
-    // Verifica posti disponibili
-    const { data: turnoAggiornato, error: turnoError } = await supabase
-      .from('turni')
-      .select('posti_totali, posti_occupati')
-      .eq('id', turnoId)
-      .single();
+    // Import Supabase client
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    if (turnoError) {
-      console.error('❌ Errore verifica posti:', turnoError);
-      throw turnoError;
-    }
+    // Variabili globali
+    let turnoId = null;
+    let turnoData = null;
 
-    const postiDisponibili = turnoAggiornato.posti_totali - turnoAggiornato.posti_occupati;
-    
-    console.log(`📊 Posti disponibili: ${postiDisponibili}`);
-    
-    // Determina status
-    if (postiDisponibili > 0) {
-      formData.status = 'CONFIRMED';
-      formData.posizione_lista = null;
-      console.log('✅ Status: CONFIRMED');
-    } else {
-      // Calcola posizione in lista d'attesa
-      const { count, error: countError } = await supabase
-        .from('iscrizioni')
-        .select('*', { count: 'exact', head: true })
-        .eq('turno_id', turnoId)
-        .eq('status', 'WAITING_LIST');
+    // Caricamento turno
+    async function caricaTurno() {
+      const params = new URLSearchParams(window.location.search);
+      turnoId = params.get('id');
 
-      if (countError) {
-        console.error('❌ Errore conteggio lista:', countError);
-        throw countError;
+      if (!turnoId) {
+        window.location.href = 'index.html';
+        return;
       }
 
-      formData.status = 'WAITING_LIST';
-      formData.posizione_lista = (count || 0) + 1;
-      console.log(`⏳ Status: WAITING_LIST - Posizione ${formData.posizione_lista}`);
+      try {
+        const { data, error } = await supabase
+          .from('turni')
+          .select('*')
+          .eq('id', turnoId)
+          .single();
+
+        if (error) throw error;
+        turnoData = data;
+        mostraInfoTurno(data);
+      } catch (error) {
+        console.error('Errore caricamento turno:', error);
+        alert('Errore nel caricamento del turno');
+        window.location.href = 'index.html';
+      }
     }
 
-    // Inserisci iscrizione
-    const { data: iscrizione, error: inscriptionError } = await supabase
-      .from('iscrizioni')
-      .insert([formData])
-      .select()
-      .single();
+    function mostraInfoTurno(turno) {
+      const postiDisponibili = turno.posti_totali - turno.posti_occupati;
+      const infoDiv = document.getElementById('turno-info');
+      
+      const dataInizio = new Date(turno.data_inizio).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+      const dataFine = new Date(turno.data_fine).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
 
-    if (inscriptionError) {
-      console.error('❌ Errore inserimento:', inscriptionError);
-      throw inscriptionError;
+      let statusHTML = '';
+      if (postiDisponibili > 0) {
+        statusHTML = `<span class="status-badge available">✓ ${postiDisponibili} posti disponibili</span>`;
+      } else {
+        statusHTML = `<span class="status-badge waiting">Lista d'attesa</span>`;
+      }
+
+      infoDiv.innerHTML = `
+        <h2>${turno.nome}</h2>
+        <p class="turno-date">📅 ${dataInizio} - ${dataFine}</p>
+        <p class="turno-location">📍 ${turno.luogo}</p>
+        ${statusHTML}
+      `;
     }
 
-    console.log('✅ Iscrizione creata:', iscrizione);
+    // Gestione form dinamico
+    document.getElementById('maggiorenne').addEventListener('change', function() {
+      const genitoreSection = document.getElementById('genitore-section');
+      const genitoreNome = document.getElementById('genitore_nome');
+      const genitoreCognome = document.getElementById('genitore_cognome');
+      
+      if (this.checked) {
+        genitoreSection.style.display = 'none';
+        genitoreNome.removeAttribute('required');
+        genitoreCognome.removeAttribute('required');
+      } else {
+        genitoreSection.style.display = 'block';
+        genitoreNome.setAttribute('required', 'required');
+        genitoreCognome.setAttribute('required', 'required');
+      }
+    });
 
-    // Mostra modal successo
-    const modal = document.getElementById('success-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalMessage = document.getElementById('modal-message');
+    document.getElementById('ha_allergie').addEventListener('change', function() {
+      document.getElementById('allergie-desc-group').style.display = this.checked ? 'block' : 'none';
+    });
 
-    if (formData.status === 'CONFIRMED') {
-      modalTitle.textContent = '✅ Iscrizione confermata!';
-      modalMessage.textContent = `Complimenti! Sei iscritto al ${turnoData.nome}. Riceverai una email di conferma all'indirizzo ${formData.email}.`;
-    } else {
-      modalTitle.textContent = '⏳ Inserito in lista d\'attesa';
-      modalMessage.textContent = `Il turno è al completo. Sei stato inserito in lista d'attesa alla posizione ${formData.posizione_lista}. Ti contatteremo se si libera un posto!`;
-    }
+    document.getElementById('assume_medicinali').addEventListener('change', function() {
+      document.getElementById('medicinali-desc-group').style.display = this.checked ? 'block' : 'none';
+    });
 
-    modal.style.display = 'flex';
+    // Submit form
+    document.getElementById('iscrizione-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-  } catch (error) {
-    console.error('❌ Errore iscrizione:', error);
-    errorDiv.textContent = `Errore: ${error.message || 'Si è verificato un errore. Riprova o contatta la parrocchia.'}`;
-    errorDiv.style.display = 'block';
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Conferma Iscrizione';
-  }
-}
+      const submitBtn = document.getElementById('submit-btn');
+      const errorDiv = document.getElementById('form-error');
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Invio in corso...';
+      errorDiv.style.display = 'none';
 
-// Avvia
-init();
+      const formData = {
+        turno_id: parseInt(turnoId),
+        nome: document.getElementById('nome').value.trim(),
+        cognome: document.getElementById('cognome').value.trim(),
+        data_nascita: document.getElementById('data_nascita').value,
+        luogo_nascita: document.getElementById('luogo_nascita').value.trim(),
+        residenza_via: document.getElementById('residenza_via').value.trim(),
+        residenza_citta: document.getElementById('residenza_citta').value.trim(),
+        maggiorenne: document.getElementById('maggiorenne').checked,
+        genitore_nome: document.getElementById('genitore_nome').value.trim() || null,
+        genitore_cognome: document.getElementById('genitore_cognome').value.trim() || null,
+        email: document.getElementById('email').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        ha_allergie: document.getElementById('ha_allergie').checked,
+        allergie_desc: document.getElementById('allergie_desc').value.trim() || null,
+        assume_medicinali: document.getElementById('assume_medicinali').checked,
+        medicinali_desc: document.getElementById('medicinali_desc').value.trim() || null,
+        consenso_gdpr: document.getElementById('consenso_gdpr').checked
+      };
+
+      try {
+        // Verifica posti disponibili
+        const { data: turnoAggiornato, error: turnoError } = await supabase
+          .from('turni')
+          .select('posti_totali, posti_occupati')
+          .eq('id', turnoId)
+          .single();
+
+        if (turnoError) throw turnoError;
+
+        const postiDisponibili = turnoAggiornato.posti_totali - turnoAggiornato.posti_occupati;
+        
+        // Determina status
+        if (postiDisponibili > 0) {
+          formData.status = 'CONFIRMED';
+          formData.posizione_lista = null;
+        } else {
+          // Calcola posizione in lista d'attesa
+          const { count, error: countError } = await supabase
+            .from('iscrizioni')
+            .select('*', { count: 'exact', head: true })
+            .eq('turno_id', turnoId)
+            .eq('status', 'WAITING_LIST');
+
+          if (countError) throw countError;
+
+          formData.status = 'WAITING_LIST';
+          formData.posizione_lista = (count || 0) + 1;
+        }
+
+        // Inserisci iscrizione
+        const { data: iscrizione, error: inscriptionError } = await supabase
+          .from('iscrizioni')
+          .insert([formData])
+          .select()
+          .single();
+
+        if (inscriptionError) throw inscriptionError;
+
+        // Mostra modal successo
+        const modal = document.getElementById('success-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+
+        if (formData.status === 'CONFIRMED') {
+          modalTitle.textContent = '✅ Iscrizione confermata!';
+          modalMessage.textContent = `Complimenti! Sei iscritto al ${turnoData.nome}. Riceverai una email di conferma all'indirizzo ${formData.email}.`;
+        } else {
+          modalTitle.textContent = '⏳ Inserito in lista d\'attesa';
+          modalMessage.textContent = `Il turno è al completo. Sei stato inserito in lista d'attesa alla posizione ${formData.posizione_lista}. Ti contatteremo se si libera un posto!`;
+        }
+
+        modal.style.display = 'flex';
+
+      } catch (error) {
+        console.error('Errore iscrizione:', error);
+        errorDiv.textContent = 'Si è verificato un errore. Riprova o contatta la parrocchia.';
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Conferma Iscrizione';
+      }
+    });
+
+    // Inizializzazione
+    caricaTurno();
+  </script>
+</body>
+</html>
