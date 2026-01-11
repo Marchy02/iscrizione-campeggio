@@ -235,6 +235,7 @@
 
     // Gestione form dinamico
     document.getElementById('maggiorenne').addEventListener('change', function() {
+      document.getElementById('maggiorenne').dispatchEvent(new Event('change'));
       const genitoreSection = document.getElementById('genitore-section');
       const genitoreNome = document.getElementById('genitore_nome');
       const genitoreCognome = document.getElementById('genitore_cognome');
