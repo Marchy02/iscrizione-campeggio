@@ -180,6 +180,8 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    supabase.auth.signOut();
+
     // Variabili globali
     let turnoId = null;
     let turnoData = null;
