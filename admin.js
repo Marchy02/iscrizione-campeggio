@@ -1,7 +1,8 @@
-// Configurazione Supabase
+// ⚠️ SOSTITUISCI QUESTI VALORI CON I TUOI
 const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
 
+// Import Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -10,34 +11,58 @@ let currentTurnoId = null;
 
 // Inizializzazione
 async function init() {
-  // Verifica sessione esistente
-  const { data: { session } } = await supabase.auth.getSession();
+  console.log('🚀 Inizializzazione admin panel...');
   
-  if (session) {
-    currentUser = session.user;
-    mostraAdmin();
-    await caricaTurniSelect();
-  } else {
-    mostraLogin();
-  }
-
-  // Listener cambio auth
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN') {
+  try {
+    // Verifica sessione esistente
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('❌ Errore sessione:', sessionError);
+    }
+    
+    if (session) {
+      console.log('✅ Sessione trovata:', session.user.email);
       currentUser = session.user;
       mostraAdmin();
-      caricaTurniSelect();
-    } else if (event === 'SIGNED_OUT') {
-      currentUser = null;
+      await caricaTurniSelect();
+    } else {
+      console.log('ℹ️ Nessuna sessione attiva');
       mostraLogin();
     }
-  });
 
+    // Listener cambio auth
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Auth state change:', event);
+      if (event === 'SIGNED_IN') {
+        currentUser = session.user;
+        console.log('✅ Login effettuato:', currentUser.email);
+        mostraAdmin();
+        caricaTurniSelect();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        console.log('ℹ️ Logout effettuato');
+        mostraLogin();
+      }
+    });
+
+    setupEventListeners();
+    
+  } catch (error) {
+    console.error('❌ Errore inizializzazione:', error);
+  }
+}
+
+function setupEventListeners() {
   // Event listeners
   document.getElementById('login-form').addEventListener('submit', handleLogin);
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
   document.getElementById('turno-select').addEventListener('change', handleTurnoChange);
-  document.getElementById('refresh-btn').addEventListener('click', () => caricaDatiTurno(currentTurnoId));
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    if (currentTurnoId) {
+      caricaDatiTurno(currentTurnoId);
+    }
+  });
 
   // Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -74,18 +99,24 @@ async function handleLogin(e) {
   const password = document.getElementById('login-password').value;
   const errorDiv = document.getElementById('login-error');
 
+  console.log('🔐 Tentativo login:', email);
+
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Errore login:', error);
+      throw error;
+    }
 
+    console.log('✅ Login riuscito');
     errorDiv.style.display = 'none';
   } catch (error) {
-    console.error('Errore login:', error);
-    errorDiv.textContent = 'Email o password errati';
+    console.error('❌ Errore login:', error);
+    errorDiv.textContent = 'Email o password errati. ' + error.message;
     errorDiv.style.display = 'block';
   }
 }
@@ -93,23 +124,31 @@ async function handleLogin(e) {
 // Logout
 async function handleLogout() {
   try {
+    console.log('🚪 Logout...');
     await supabase.auth.signOut();
   } catch (error) {
-    console.error('Errore logout:', error);
+    console.error('❌ Errore logout:', error);
   }
 }
 
 // Carica turni nel select
 async function caricaTurniSelect() {
+  console.log('🔄 Caricamento turni per select...');
+  
   try {
     const { data: turni, error } = await supabase
       .from('turni')
       .select('*')
       .order('data_inizio', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Errore caricamento turni:', error);
+      throw error;
+    }
 
-const select = document.getElementById('turno-select');
+    console.log('✅ Turni caricati:', turni.length);
+
+    const select = document.getElementById('turno-select');
     select.innerHTML = '<option value="">-- Seleziona un turno --</option>';
 
     turni.forEach(turno => {
@@ -127,7 +166,8 @@ const select = document.getElementById('turno-select');
     }
 
   } catch (error) {
-    console.error('Errore caricamento turni:', error);
+    console.error('❌ Errore caricamento turni:', error);
+    alert('Errore nel caricamento dei turni: ' + error.message);
   }
 }
 
@@ -144,6 +184,8 @@ async function handleTurnoChange(e) {
 async function caricaDatiTurno(turnoId) {
   if (!turnoId) return;
 
+  console.log('🔄 Caricamento dati turno:', turnoId);
+
   try {
     // Carica statistiche
     const { data: turno, error: turnoError } = await supabase
@@ -152,7 +194,12 @@ async function caricaDatiTurno(turnoId) {
       .eq('id', turnoId)
       .single();
 
-    if (turnoError) throw turnoError;
+    if (turnoError) {
+      console.error('❌ Errore caricamento turno:', turnoError);
+      throw turnoError;
+    }
+
+    console.log('✅ Turno:', turno);
 
     // Conta lista d'attesa
     const { count: countAttesa, error: countError } = await supabase
@@ -161,7 +208,12 @@ async function caricaDatiTurno(turnoId) {
       .eq('turno_id', turnoId)
       .eq('status', 'WAITING_LIST');
 
-    if (countError) throw countError;
+    if (countError) {
+      console.error('❌ Errore conteggio attesa:', countError);
+      throw countError;
+    }
+
+    console.log('✅ Lista attesa:', countAttesa);
 
     mostraStatistiche(turno, countAttesa || 0);
 
@@ -172,8 +224,8 @@ async function caricaDatiTurno(turnoId) {
     await caricaIscrizioni(turnoId, 'WAITING_LIST', 'attesa-container');
 
   } catch (error) {
-    console.error('Errore caricamento dati:', error);
-    alert('Errore nel caricamento dei dati');
+    console.error('❌ Errore caricamento dati:', error);
+    alert('Errore nel caricamento dei dati: ' + error.message);
   }
 }
 
@@ -205,7 +257,9 @@ function mostraStatistiche(turno, countAttesa) {
 // Carica iscrizioni
 async function caricaIscrizioni(turnoId, status, containerId) {
   const container = document.getElementById(containerId);
-  container.innerHTML = '<p style="text-align: center; color: #8D6E63;">Caricamento...</p>';
+  container.innerHTML = '<p style="text-align: center; color: #8D6E63; padding: 20px;">Caricamento...</p>';
+
+  console.log(`🔄 Caricamento iscrizioni ${status} per turno ${turnoId}`);
 
   try {
     let query = supabase
@@ -222,10 +276,15 @@ async function caricaIscrizioni(turnoId, status, containerId) {
 
     const { data: iscrizioni, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error(`❌ Errore caricamento iscrizioni ${status}:`, error);
+      throw error;
+    }
+
+    console.log(`✅ Iscrizioni ${status}:`, iscrizioni.length);
 
     if (iscrizioni.length === 0) {
-      container.innerHTML = `<p style="text-align: center; color: #8D6E63;">Nessuna iscrizione ${status === 'WAITING_LIST' ? 'in lista d\'attesa' : 'confermata'}</p>`;
+      container.innerHTML = `<p style="text-align: center; color: #8D6E63; padding: 20px;">Nessuna iscrizione ${status === 'WAITING_LIST' ? 'in lista d\'attesa' : 'confermata'}</p>`;
       return;
     }
 
@@ -236,8 +295,8 @@ async function caricaIscrizioni(turnoId, status, containerId) {
     });
 
   } catch (error) {
-    console.error('Errore caricamento iscrizioni:', error);
-    container.innerHTML = '<p style="text-align: center; color: #F44336;">Errore nel caricamento</p>';
+    console.error('❌ Errore caricamento iscrizioni:', error);
+    container.innerHTML = '<p style="text-align: center; color: #F44336; padding: 20px;">Errore nel caricamento: ' + error.message + '</p>';
   }
 }
 
@@ -246,8 +305,14 @@ function creaIscrizioneItem(iscrizione) {
   const item = document.createElement('div');
   item.className = 'iscrizione-item';
 
-  const dataNascita = new Date(iscrizione.data_nascita).toLocaleDateString('it-IT');
-  const dataIscrizione = new Date(iscrizione.created_at).toLocaleDateString('it-IT');
+  const dataNascita = new Date(iscrizione.data_nascita + 'T00:00:00').toLocaleDateString('it-IT');
+  const dataIscrizione = new Date(iscrizione.created_at).toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   let posizioneHTML = '';
   if (iscrizione.status === 'WAITING_LIST' && iscrizione.posizione_lista) {
@@ -267,10 +332,10 @@ function creaIscrizioneItem(iscrizione) {
   if (iscrizione.ha_allergie || iscrizione.assume_medicinali) {
     allergieMedicineHTML = '<div class="iscrizione-detail" style="grid-column: 1 / -1; background: #FFF3E0; padding: 10px; border-radius: 8px; margin-top: 10px;">';
     if (iscrizione.ha_allergie) {
-      allergieMedicineHTML += `<div><strong>⚠️ Allergie:</strong> ${iscrizione.allergie_desc || 'N/D'}</div>`;
+      allergieMedicineHTML += `<div><strong>⚠️ Allergie:</strong> ${iscrizione.allergie_desc || 'Non specificato'}</div>`;
     }
     if (iscrizione.assume_medicinali) {
-      allergieMedicineHTML += `<div style="margin-top: 5px;"><strong>💊 Medicinali:</strong> ${iscrizione.medicinali_desc || 'N/D'}</div>`;
+      allergieMedicineHTML += `<div style="margin-top: 5px;"><strong>💊 Medicinali:</strong> ${iscrizione.medicinali_desc || 'Non specificato'}</div>`;
     }
     allergieMedicineHTML += '</div>';
   }
@@ -319,6 +384,8 @@ function creaIscrizioneItem(iscrizione) {
 window.promuoviIscrizione = async function(iscrizioneId) {
   if (!confirm('Confermi la promozione di questo partecipante?')) return;
 
+  console.log('↑ Promozione iscrizione:', iscrizioneId);
+
   try {
     // Aggiorna status a CONFIRMED
     const { error: updateError } = await supabase
@@ -330,7 +397,10 @@ window.promuoviIscrizione = async function(iscrizioneId) {
       })
       .eq('id', iscrizioneId);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('❌ Errore promozione:', updateError);
+      throw updateError;
+    }
 
     // Riordina le posizioni rimanenti in lista d'attesa
     const { data: iscrizioniAttesa, error: fetchError } = await supabase
@@ -340,7 +410,10 @@ window.promuoviIscrizione = async function(iscrizioneId) {
       .eq('status', 'WAITING_LIST')
       .order('posizione_lista', { ascending: true });
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('❌ Errore fetch lista attesa:', fetchError);
+      throw fetchError;
+    }
 
     // Aggiorna le posizioni
     for (let i = 0; i < iscrizioniAttesa.length; i++) {
@@ -350,18 +423,21 @@ window.promuoviIscrizione = async function(iscrizioneId) {
         .eq('id', iscrizioniAttesa[i].id);
     }
 
+    console.log('✅ Promozione completata');
     alert('Iscrizione promossa con successo!');
     await caricaDatiTurno(currentTurnoId);
 
   } catch (error) {
-    console.error('Errore promozione:', error);
-    alert('Errore nella promozione dell\'iscrizione');
+    console.error('❌ Errore promozione:', error);
+    alert('Errore nella promozione: ' + error.message);
   }
 };
 
 // Cancella iscrizione
 window.cancellaIscrizione = async function(iscrizioneId) {
   if (!confirm('Sei sicuro di voler cancellare questa iscrizione? Questa azione non può essere annullata.')) return;
+
+  console.log('✕ Cancellazione iscrizione:', iscrizioneId);
 
   try {
     // Recupera l'iscrizione prima di cancellarla
@@ -371,7 +447,10 @@ window.cancellaIscrizione = async function(iscrizioneId) {
       .eq('id', iscrizioneId)
       .single();
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('❌ Errore fetch iscrizione:', fetchError);
+      throw fetchError;
+    }
 
     // Cancella iscrizione
     const { error: deleteError } = await supabase
@@ -379,7 +458,12 @@ window.cancellaIscrizione = async function(iscrizioneId) {
       .delete()
       .eq('id', iscrizioneId);
 
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error('❌ Errore cancellazione:', deleteError);
+      throw deleteError;
+    }
+
+    console.log('✅ Iscrizione cancellata');
 
     // Se era CONFIRMED, prova a promuovere automaticamente dalla lista d'attesa
     if (iscrizione.status === 'CONFIRMED') {
@@ -390,13 +474,15 @@ window.cancellaIscrizione = async function(iscrizioneId) {
     await caricaDatiTurno(currentTurnoId);
 
   } catch (error) {
-    console.error('Errore cancellazione:', error);
-    alert('Errore nella cancellazione dell\'iscrizione');
+    console.error('❌ Errore cancellazione:', error);
+    alert('Errore nella cancellazione: ' + error.message);
   }
 };
 
 // Promuovi automaticamente dalla lista d'attesa
 async function promuoviAutomaticamente(turnoId) {
+  console.log('🔄 Promozione automatica per turno:', turnoId);
+  
   try {
     // Verifica se ci sono posti disponibili
     const { data: turno } = await supabase
@@ -418,7 +504,17 @@ async function promuoviAutomaticamente(turnoId) {
         .limit(1)
         .single();
 
-      if (fetchError || !primoInAttesa) return;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('❌ Errore fetch primo in attesa:', fetchError);
+        throw fetchError;
+      }
+
+      if (!primoInAttesa) {
+        console.log('ℹ️ Nessuno in lista d\'attesa');
+        return;
+      }
+
+      console.log('✅ Promozione automatica:', primoInAttesa.nome, primoInAttesa.cognome);
 
       // Promuovi
       await supabase
@@ -438,18 +534,20 @@ async function promuoviAutomaticamente(turnoId) {
         .eq('status', 'WAITING_LIST')
         .order('posizione_lista', { ascending: true });
 
-      for (let i = 0; i < iscrizioniAttesa.length; i++) {
-        await supabase
-          .from('iscrizioni')
-          .update({ posizione_lista: i + 1 })
-          .eq('id', iscrizioniAttesa[i].id);
+      if (iscrizioniAttesa) {
+        for (let i = 0; i < iscrizioniAttesa.length; i++) {
+          await supabase
+            .from('iscrizioni')
+            .update({ posizione_lista: i + 1 })
+            .eq('id', iscrizioniAttesa[i].id);
+        }
       }
 
-      console.log('Promozione automatica completata');
+      console.log('✅ Promozione automatica completata');
     }
 
   } catch (error) {
-    console.error('Errore promozione automatica:', error);
+    console.error('❌ Errore promozione automatica:', error);
   }
 }
 

@@ -1,14 +1,26 @@
-// Configurazione Supabase
-const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co'; // Sostituisci con il tuo URL
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ'; // Sostituisci con la tua chiave
+// ⚠️ SOSTITUISCI QUESTI VALORI CON I TUOI
+const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
 
-// Import dinamico Supabase
+// Variabile globale per Supabase client
 let supabase;
 
-async function initSupabase() {
-  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  caricaTurni();
+// Inizializzazione
+async function init() {
+  try {
+    // Import Supabase
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    console.log('✅ Supabase inizializzato correttamente');
+    
+    // Carica i turni
+    await caricaTurni();
+  } catch (error) {
+    console.error('❌ Errore inizializzazione:', error);
+    document.getElementById('error-message').textContent = 'Errore di connessione. Riprova più tardi.';
+    document.getElementById('error-message').style.display = 'block';
+  }
 }
 
 // Carica i turni dal database
@@ -22,18 +34,25 @@ async function caricaTurni() {
   turniContainer.innerHTML = '';
 
   try {
+    console.log('🔄 Caricamento turni...');
+    
     const { data: turni, error } = await supabase
       .from('turni')
       .select('*')
       .eq('attivo', true)
       .order('data_inizio', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Errore query:', error);
+      throw error;
+    }
+
+    console.log('✅ Turni caricati:', turni);
 
     loadingDiv.style.display = 'none';
 
-    if (turni.length === 0) {
-      turniContainer.innerHTML = '<p style="text-align: center; color: #8D6E63;">Nessun turno disponibile al momento.</p>';
+    if (!turni || turni.length === 0) {
+      turniContainer.innerHTML = '<p style="text-align: center; color: #8D6E63; padding: 40px;">Nessun turno disponibile al momento.</p>';
       return;
     }
 
@@ -43,9 +62,9 @@ async function caricaTurni() {
     });
 
   } catch (error) {
-    console.error('Errore caricamento turni:', error);
+    console.error('❌ Errore caricamento turni:', error);
     loadingDiv.style.display = 'none';
-    errorDiv.textContent = 'Si è verificato un errore nel caricamento dei turni. Riprova più tardi.';
+    errorDiv.textContent = `Errore: ${error.message || 'Impossibile caricare i turni'}`;
     errorDiv.style.display = 'block';
   }
 }
@@ -58,11 +77,11 @@ function creaTurnoCard(turno) {
   const postiDisponibili = turno.posti_totali - turno.posti_occupati;
   const pieno = postiDisponibili <= 0;
 
-  const dataInizio = new Date(turno.data_inizio).toLocaleDateString('it-IT', { 
+  const dataInizio = new Date(turno.data_inizio + 'T00:00:00').toLocaleDateString('it-IT', { 
     day: 'numeric', 
     month: 'long' 
   });
-  const dataFine = new Date(turno.data_fine).toLocaleDateString('it-IT', { 
+  const dataFine = new Date(turno.data_fine + 'T00:00:00').toLocaleDateString('it-IT', { 
     day: 'numeric', 
     month: 'long', 
     year: 'numeric' 
@@ -95,5 +114,5 @@ function vaiIscrizione(turnoId) {
   window.location.href = `turno.html?id=${turnoId}`;
 }
 
-// Inizializzazione
-initSupabase();
+// Avvia l'applicazione
+init();
