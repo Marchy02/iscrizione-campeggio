@@ -235,7 +235,7 @@
 
     // Gestione form dinamico
     document.getElementById('maggiorenne').addEventListener('change', function() {
-      document.getElementById('maggiorenne').dispatchEvent(new Event('change'));
+      
       const genitoreSection = document.getElementById('genitore-section');
       const genitoreNome = document.getElementById('genitore_nome');
       const genitoreCognome = document.getElementById('genitore_cognome');
@@ -250,6 +250,8 @@
         genitoreCognome.setAttribute('required', 'required');
       }
     });
+
+    document.getElementById('maggiorenne').dispatchEvent(new Event('change'));
 
     document.getElementById('ha_allergie').addEventListener('change', function() {
       document.getElementById('allergie-desc-group').style.display = this.checked ? 'block' : 'none';
