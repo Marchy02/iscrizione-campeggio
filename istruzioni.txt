@@ -1,184 +1,313 @@
-# PROGETTO: Sistema iscrizioni campeggi parrocchiali – Problemi attuali e requisiti
+# Bug report – Sistema iscrizioni campeggio (Supabase + frontend statico)
 
-## Contesto generale
-
-Sto sviluppando un sistema web per gestire le iscrizioni ai campeggi estivi parrocchiali con:
-
-* 3 turni distinti
-* 30 posti disponibili per ogni turno
-* lista d’attesa automatica per ogni turno
-* sito pubblico per i genitori
-* pannello amministratore
-* database Supabase
-* hosting statico (GitHub Pages)
-* email automatiche di conferma e lista d’attesa
-
-Il progetto attuale **non è stabile né affidabile** e necessita di una rigenerazione completa.
+Questo documento descrive i problemi attuali del progetto e cosa va sistemato.
+Serve come riferimento tecnico per intervenire sul codice.
 
 ---
 
-## Problemi principali riscontrati
+## Contesto progetto
 
-### 1. Le iscrizioni falliscono in modo intermittente
+* Backend: Supabase (Postgres + RPC)
+* Frontend: HTML + JS statico (GitHub Pages)
+* File principali:
 
-L’invio del modulo:
-
-* a volte calcola correttamente lo stato (CONFIRMED / WAITING_LIST)
-* ma spesso fallisce nel salvataggio nel database
-* con errori HTTP 400 / 401
-* e violazioni di vincoli SQL (campi NOT NULL mancanti)
-
-Risultato: il genitore vede la conferma ma l’iscrizione non viene realmente salvata.
+  * `turno.html`
+  * `admin.html`
+  * `app.js`
+  * funzioni RPC già funzionanti (`crea_iscrizione`, `get_turno_stats`, ecc.)
 
 ---
 
-### 2. Backend e database non sono allineati
+## Problemi da risolvere
 
-La struttura del database richiede molti campi obbligatori (dati anagrafici, contatti, consenso GDPR, ecc.), ma:
+### 1. Errore JS in admin panel all’avvio
 
-* la logica di inserimento non fornisce sempre tutti i dati
-* la funzione di registrazione non gestisce correttamente tutti i campi
-* i tipi dei dati non sono sempre coerenti
+**Errore console:**
 
-Questo causa errori strutturali e perdita di dati.
+```
+admin.html:116 Errore init: ReferenceError: setupConditionalFields is not defined
+    at init (admin.html:112:9)
+```
 
----
+**Descrizione:**
 
-### 3. Gestione lista d’attesa fragile
+Nel file `admin.html`, durante l’esecuzione della funzione `init()`, viene chiamata:
 
-Attualmente:
+```js
+setupConditionalFields();
+```
 
-* la lista d’attesa non è garantita per turno in modo affidabile
-* la posizione non è sempre calcolata correttamente
-* non è garantita la promozione automatica quando un posto si libera
-* non è garantito l’ordine cronologico corretto
+ma questa funzione **non è definita nel file admin.html** (esiste solo in `turno.html`).
 
----
+**Comportamento attuale:**
 
-### 4. Problemi di sicurezza e permessi (RLS)
+* L’admin panel genera errore JS all’apertura
+* Parte del codice successivo non viene eseguito correttamente
 
-L’architettura attuale ha:
+**Fix richiesto:**
 
-* conflitti tra accesso pubblico e accesso admin
-* tentativi diretti di scrittura sulle tabelle
-* policy modificate più volte senza una struttura chiara
-* rischio di blocchi improvvisi o comportamenti incoerenti
+Una delle seguenti soluzioni:
 
-Serve una separazione netta:
+* Rimuovere la chiamata a `setupConditionalFields()` da `admin.html`
 
-* utenti pubblici → solo richiesta di iscrizione
-* amministratori → gestione completa
-* logica critica solo lato database
+oppure
 
----
+* Implementare una funzione vuota di compatibilità in `admin.html`:
 
-### 5. Email automatiche non affidabili
-
-È richiesto che:
-
-* ogni iscrizione confermata riceva email automatica
-* ogni persona in lista d’attesa riceva email automatica
-* quando una persona viene promossa dalla lista d’attesa → riceva nuova email
-* le email siano affidabili, asincrone e non blocchino la registrazione
-
-Attualmente questo flusso non è stabile né completamente funzionante.
+```js
+function setupConditionalFields() {}
+```
 
 ---
 
-### 6. Logica distribuita e duplicata
+### 2. Bug form maggiorenne / minorenne
 
-Ora la logica è spezzata tra:
+**File:** `turno.html`
 
-* frontend (calcolo posti)
-* backend (calcolo posti)
-* database
+**Descrizione:**
 
-Questo genera:
+Il form ha una checkbox:
 
-* incoerenze
-* race condition possibili
-* difficoltà di manutenzione
-* risultati non deterministici sotto carico
+> "Il partecipante è maggiorenne"
 
----
+Problemi attuali:
 
-## Requisiti funzionali corretti
+* All’apertura della pagina, se NON è maggiorenne, il form dei dati del genitore deve apparire
+* Se l’utente spunta "maggiorenne", il form dei genitori **non scompare sempre correttamente**
 
-Il sistema finale deve garantire:
+**Fix richiesto:**
 
-### Iscrizione
+Gestione completa dello stato iniziale + evento `change` sul checkbox:
 
-* scelta turno
-* inserimento dati completi
-* determinazione atomica dello stato:
+* se `checked === true` → nascondere sezione genitori + rimuovere required
+* se `checked === false` → mostrare sezione genitori + required attivi
 
-  * CONFIRMED se posti disponibili
-  * WAITING_LIST se esauriti
-* assegnazione posizione lista d’attesa per turno
+Implementare funzione unica tipo:
 
-### Lista d’attesa
+```js
+function aggiornaStatoGenitore() { ... }
+```
 
-* separata per ogni turno
-* ordinata correttamente
-* promozione automatica quando un posto si libera
-* aggiornamento stato
+chiamata:
 
-### Email automatiche
-
-* conferma iscrizione
-* notifica lista d’attesa
-* notifica promozione
-* email affidabili e gratuite (es. Resend o equivalente)
-
-### Amministrazione
-
-* login admin
-* visualizzazione iscritti per turno
-* visualizzazione lista d’attesa
-* cancellazione iscrizioni
-* promozione manuale/automatica
-
-### Sicurezza
-
-* nessuna scrittura diretta alle tabelle dal frontend
-* controllo completo lato database
-* policy RLS corrette
-* separazione pubblico / admin
+* all’avvio
+* ad ogni `change`
 
 ---
 
-## Requisiti tecnici
+### 3. Statistiche non visibili nel pannello admin
 
-* Supabase (PostgreSQL + RPC + RLS)
-* frontend statico (HTML/CSS/JS)
-* hosting gratuito
-* nessun server proprietario
-* nessuna carta di credito
-* compatibile GitHub Pages
-* solo JavaScript vanilla
+**File:** `admin.html`
+
+**Backend:** funzione RPC `get_turno_stats(p_turno_id)` restituisce JSON
+
+Esempio risposta:
+
+```json
+{
+  "confermati": 3,
+  "lista_attesa": 1,
+  "posti_totali": 30,
+  "posti_occupati": 3,
+  "posti_disponibili": 27
+}
+```
+
+**Problema:**
+
+Nel pannello admin le statistiche non vengono mostrate o restano vuote.
+
+**Cause probabili:**
+
+* parsing errato della risposta (usare `stats.campo`, NON `stats[0].campo`)
+* errore JS precedente (vedi bug #1) che interrompe l’esecuzione
+* elementi DOM non trovati o id errati
+
+**Fix richiesto:**
+
+Verificare che:
+
+```js
+const { data: stats } = await supabase.rpc('get_turno_stats', ...)
+```
+
+venga poi usato come:
+
+```js
+stats.confermati
+stats.lista_attesa
+stats.posti_disponibili
+```
+
+E che gli elementi DOM esistano:
+
+* `#stat-confermati`
+* `#stat-attesa`
+* `#stat-posti`
+* ecc.
 
 ---
 
-## Requisiti UI
+### 4. Campi allergie / patologie: textarea non appare
 
-* family friendly
-* colori pastello
-* stile semplice e rassicurante
-* mobile first
-* accessibile a utenti poco tecnici
-* font tipo Nunito / Quicksand
+**File:** `turno.html`
+
+**Descrizione:**
+
+Ci sono due checkbox:
+
+* "Ha allergie"
+* "Ha patologie / medicinali"
+
+Quando vengono selezionate:
+
+* dovrebbe apparire un textarea per la descrizione
+
+**Problema attuale:**
+
+* checkbox funziona
+* ma il campo testo NON appare
+
+**Cause probabili:**
+
+* `getElementById` errato
+* `style.display` non aggiornato
+* funzione JS non chiamata all’avvio
+* ID HTML non coerenti con JS
+
+**Fix richiesto:**
+
+Implementare logica robusta:
+
+```js
+if (checkbox.checked) {
+  section.style.display = 'block'
+  textarea.required = true
+} else {
+  section.style.display = 'none'
+  textarea.required = false
+  textarea.value = ''
+}
+```
+
+con:
+
+* evento `change`
+* chiamata iniziale all’avvio pagina
+
+---
+
+## Priorità consigliata
+
+1. Fix errore JS `setupConditionalFields` in admin.html
+2. Ripristinare correttamente statistiche admin
+3. Sistemare form maggiorenne/minorenne
+4. Sistemare campi allergie/patologie
 
 ---
 
 ## Obiettivo finale
 
-Sistema stabile che:
+* Admin panel senza errori JS
+* Statistiche funzionanti
+* UX form corretta per minorenni
+* Campi sanitari visibili quando richiesti
+* Nessun errore in console
 
-* non perde iscrizioni
-* non supera mai il numero massimo di posti
-* gestisce correttamente la lista d’attesa
-* invia email corrette
-* è semplice per gli utenti
-* è semplice da amministrare
-* è sicuro
+---
 
+Fine documento.
+
+---
+
+## File SQL attualmente in uso
+
+Questi sono i file SQL correnti del progetto (backend Supabase):
+
+### 1. `01-schema.sql`
+
+Contiene:
+
+* definizione tabelle: `turni`, `iscrizioni`, `email_queue`
+* vincoli (CHECK, FK, UNIQUE)
+* indici
+* trigger `updated_at`
+* trigger per ricalcolo `posti_occupati`
+* funzioni di supporto:
+
+  * `riordina_lista_attesa(p_turno_id BIGINT)`
+  * `promuovi_da_lista_attesa(p_turno_id BIGINT)`
+
+Ruolo: struttura completa del database.
+
+---
+
+### 2. `02-functions.sql`
+
+Contiene le RPC principali:
+
+* `crea_iscrizione(...) RETURNS json`
+* `cancella_iscrizione(p_iscrizione_id BIGINT) RETURNS json`
+* `promuovi_iscrizione(p_iscrizione_id BIGINT) RETURNS json`
+* `get_turno_stats(p_turno_id BIGINT) RETURNS json`
+
+Include:
+
+* `SECURITY DEFINER`
+* gestione lista d’attesa
+* inserimento automatico in `email_queue`
+* `GRANT EXECUTE` per anon / authenticated
+
+Ruolo: tutta la logica applicativa lato database.
+
+---
+
+### 3. `03-policies.sql`
+
+Contiene:
+
+* abilitazione RLS su tutte le tabelle
+* policy:
+
+  * lettura pubblica solo turni attivi
+  * blocco insert diretti su `iscrizioni`
+  * accesso admin tramite `user_metadata.role = 'admin'`
+  * accesso controllato a `email_queue`
+
+Ruolo: sicurezza e separazione frontend / backend.
+
+---
+
+### 4. `04-seed.sql`
+
+Contiene:
+
+* inserimento turni iniziali di esempio
+
+Nessun inserimento su `iscrizioni` o `email_queue`.
+
+Ruolo: dati iniziali per test e deploy.
+
+---
+
+## Nota importante per chi lavora sul backend
+
+* Tutte le funzioni usano `BIGINT` per gli ID
+* Evitare di creare funzioni con lo stesso nome ma tipo `INTEGER`
+* In caso di modifiche alle RPC:
+
+```sql
+DROP FUNCTION nome_funzione(tipo);
+```
+
+prima di ricrearle.
+
+* Dopo ogni modifica alle funzioni RPC:
+
+```sql
+NOTIFY pgrst, 'reload schema';
+```
+
+oppure usare il pulsante **Reload schema cache** da Supabase dashboard.
+
+---
