@@ -19,386 +19,376 @@
     </header>
 
     <main class="main-content">
-      <div id="turno-info" class="turno-info-card">
-        <!-- Info turno caricate dinamicamente -->
+      <!-- Loading -->
+      <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Caricamento...</p>
       </div>
 
-      <form id="iscrizione-form" class="iscrizione-form">
-        <!-- DATI PARTECIPANTE -->
+      <!-- Errore -->
+      <div id="error-message" class="error-banner" style="display: none;"></div>
+
+      <!-- Info Turno -->
+      <div id="turno-info" class="turno-info-card" style="display: none;">
+        <!-- Caricato dinamicamente -->
+      </div>
+
+      <!-- Form Iscrizione -->
+      <form id="iscrizione-form" class="iscrizione-form" style="display: none;">
+        <!-- Dati Partecipante -->
         <div class="form-section">
           <h3>👤 Dati Partecipante</h3>
-          
           <div class="form-row">
             <div class="form-group">
               <label for="nome">Nome *</label>
               <input type="text" id="nome" name="nome" required>
             </div>
-            
             <div class="form-group">
               <label for="cognome">Cognome *</label>
               <input type="text" id="cognome" name="cognome" required>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
-              <label for="data_nascita">Data di nascita *</label>
+              <label for="data_nascita">Data di Nascita *</label>
               <input type="date" id="data_nascita" name="data_nascita" required>
             </div>
-            
             <div class="form-group">
-              <label for="luogo_nascita">Luogo di nascita *</label>
-              <input type="text" id="luogo_nascita" name="luogo_nascita" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="residenza_via">Residenza - Via e numero civico *</label>
-            <input type="text" id="residenza_via" name="residenza_via" required>
-          </div>
-
-          <div class="form-group">
-            <label for="residenza_citta">Città di residenza *</label>
-            <input type="text" id="residenza_citta" name="residenza_citta" required>
-          </div>
-
-          <div class="form-group checkbox-group">
-            <label>
-              <input type="checkbox" id="maggiorenne" name="maggiorenne">
-              <span>Sono maggiorenne (ho compiuto 18 anni)</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- DATI GENITORE (se minorenne) -->
-        <div id="genitore-section" class="form-section" style="display: none;">
-          <h3>👨‍👩‍👧 Dati Genitore/Tutore</h3>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="genitore_nome">Nome genitore *</label>
-              <input type="text" id="genitore_nome" name="genitore_nome">
-            </div>
-            
-            <div class="form-group">
-              <label for="genitore_cognome">Cognome genitore *</label>
-              <input type="text" id="genitore_cognome" name="genitore_cognome">
+              <label for="sesso">Sesso *</label>
+              <select id="sesso" name="sesso" required>
+                <option value="">Seleziona...</option>
+                <option value="M">Maschio</option>
+                <option value="F">Femmina</option>
+              </select>
             </div>
           </div>
         </div>
 
-        <!-- CONTATTI -->
+        <!-- Contatti -->
         <div class="form-section">
           <h3>📧 Contatti</h3>
-          
           <div class="form-group">
             <label for="email">Email *</label>
             <input type="email" id="email" name="email" required>
-            <small>Riceverai la conferma di iscrizione a questo indirizzo</small>
+            <small>Riceverai conferma a questo indirizzo</small>
           </div>
-
           <div class="form-group">
             <label for="telefono">Telefono *</label>
             <input type="tel" id="telefono" name="telefono" required>
+            <small>Formato: 333-1234567</small>
           </div>
         </div>
 
-        <!-- DATI SANITARI -->
+        <!-- Residenza -->
         <div class="form-section">
-          <h3>🏥 Dati Sanitari</h3>
-          
-          <div class="form-group checkbox-group">
-            <label>
-              <input type="checkbox" id="ha_allergie" name="ha_allergie">
-              <span>Ha allergie o patologie</span>
-            </label>
+          <h3>🏠 Residenza</h3>
+          <div class="form-group">
+            <label for="indirizzo">Indirizzo *</label>
+            <input type="text" id="indirizzo" name="indirizzo" required>
           </div>
-
-          <div id="allergie-desc-group" class="form-group" style="display: none;">
-            <label for="allergie_desc">Descrizione allergie/patologie</label>
-            <textarea id="allergie_desc" name="allergie_desc" rows="3"></textarea>
-          </div>
-
-          <div class="form-group checkbox-group">
-            <label>
-              <input type="checkbox" id="assume_medicinali" name="assume_medicinali">
-              <span>Assume medicinali</span>
-            </label>
-          </div>
-
-          <div id="medicinali-desc-group" class="form-group" style="display: none;">
-            <label for="medicinali_desc">Descrizione medicinali e posologia</label>
-            <textarea id="medicinali_desc" name="medicinali_desc" rows="3"></textarea>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="citta">Città *</label>
+              <input type="text" id="citta" name="citta" required>
+            </div>
+            <div class="form-group">
+              <label for="cap">CAP *</label>
+              <input type="text" id="cap" name="cap" required pattern="[0-9]{5}">
+            </div>
           </div>
         </div>
 
-        <!-- GDPR -->
+        <!-- Informazioni Mediche -->
         <div class="form-section">
-          <h3>🔒 Consenso Privacy</h3>
-          
-          <div class="form-group checkbox-group">
+          <h3>🏥 Informazioni Mediche</h3>
+          <div class="form-group">
+            <label for="allergie">Allergie</label>
+            <textarea id="allergie" name="allergie" rows="2"></textarea>
+            <small>Indica eventuali allergie alimentari o di altro tipo</small>
+          </div>
+          <div class="form-group">
+            <label for="farmaci">Farmaci</label>
+            <textarea id="farmaci" name="farmaci" rows="2"></textarea>
+            <small>Farmaci assunti regolarmente</small>
+          </div>
+          <div class="form-group">
+            <label for="note_mediche">Note Mediche</label>
+            <textarea id="note_mediche" name="note_mediche" rows="2"></textarea>
+            <small>Altre informazioni mediche importanti</small>
+          </div>
+        </div>
+
+        <!-- Contatto Emergenza -->
+        <div class="form-section">
+          <h3>🚨 Contatto di Emergenza</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emergenza_nome">Nome e Cognome *</label>
+              <input type="text" id="emergenza_nome" name="emergenza_nome" required>
+            </div>
+            <div class="form-group">
+              <label for="emergenza_telefono">Telefono *</label>
+              <input type="tel" id="emergenza_telefono" name="emergenza_telefono" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consensi -->
+        <div class="form-section">
+          <h3>✓ Consensi</h3>
+          <div class="checkbox-group">
             <label class="gdpr-label">
-              <input type="checkbox" id="consenso_gdpr" name="consenso_gdpr" required>
+              <input type="checkbox" id="consenso_privacy" name="consenso_privacy" required>
               <span>
-                Acconsento al trattamento dei dati personali secondo quanto previsto dal Regolamento UE 2016/679 (GDPR). 
-                I dati saranno utilizzati esclusivamente per la gestione dell'iscrizione al campeggio estivo. *
+                <strong>Accetto il trattamento dei dati personali *</strong><br>
+                Dichiaro di aver letto e accettato l'informativa sulla privacy ai sensi del GDPR.
+                I dati saranno utilizzati esclusivamente per la gestione dell'iscrizione al campeggio.
+              </span>
+            </label>
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="consenso_immagini" name="consenso_immagini">
+              <span>
+                Autorizzo l'utilizzo di foto e video realizzati durante il campeggio 
+                per scopi di documentazione e comunicazione della parrocchia.
               </span>
             </label>
           </div>
         </div>
 
+        <!-- Pulsante Invio -->
         <div class="form-actions">
           <button type="submit" id="submit-btn" class="btn-primary">
             Conferma Iscrizione
           </button>
         </div>
 
+        <!-- Messaggio Errore Form -->
         <div id="form-error" class="error-message" style="display: none;"></div>
       </form>
     </main>
 
     <footer class="footer">
-      <p>Per informazioni: parrocchia.montorsozermeghedo@gmail.com | Tel: 0444 685024</p>
+      <p>Per informazioni: campeggi@parrocchia.it | Tel: 0123 456789</p>
     </footer>
   </div>
 
-  <div id="success-modal" class="modal" style="display: none;">
-    <div class="modal-content success-modal">
-      <div class="modal-icon">✅</div>
-      <h2 id="modal-title">Iscrizione confermata!</h2>
-      <p id="modal-message">Riceverai una email di conferma all'indirizzo indicato.</p>
-      <button onclick="window.location.href='index.html'" class="btn-primary">Torna alla home</button>
+  <!-- Modal Conferma -->
+  <div id="modal-conferma" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">🎉</div>
+      <h2 id="modal-title">Iscrizione Confermata!</h2>
+      <p id="modal-message">Messaggio di conferma</p>
+      <button class="btn-primary" onclick="tornaHome()">Torna alla Home</button>
     </div>
   </div>
 
   <script type="module">
-    // ⚠️ SOSTITUISCI CON LE TUE CREDENZIALI SUPABASE
+    // ============================================
+    // TURNO.HTML - Script Inline
+    // ============================================
+    
     const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
-
-    // Import Supabase
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Assicurati che non ci sia sessione admin attiva
-    await supabase.auth.signOut();
-
-    // Variabili globali
-    let turnoId = null;
-    let turnoData = null;
-
-    // ========================================
-    // CARICAMENTO TURNO
-    // ========================================
-    async function caricaTurno() {
-      const params = new URLSearchParams(window.location.search);
-      turnoId = params.get('id');
-
-      if (!turnoId) {
-        window.location.href = 'index.html';
-        return;
+    
+    let supabase;
+    let turnoId;
+    let turnoData;
+    
+    // Inizializzazione
+    async function init() {
+      try {
+        // Ottieni ID turno da URL
+        const params = new URLSearchParams(window.location.search);
+        turnoId = parseInt(params.get('id'));
+        
+        if (!turnoId) {
+          mostraErrore('ID turno non valido');
+          setTimeout(() => window.location.href = 'index.html', 2000);
+          return;
+        }
+        
+        // Setup Supabase
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Carica turno
+        await caricaTurno();
+        
+        // Setup form
+        setupForm();
+        
+      } catch (error) {
+        console.error('Errore init:', error);
+        mostraErrore('Errore di inizializzazione');
       }
-
+    }
+    
+    // Carica informazioni turno
+    async function caricaTurno() {
+      const loading = document.getElementById('loading');
+      const turnoInfo = document.getElementById('turno-info');
+      const form = document.getElementById('iscrizione-form');
+      
+      loading.style.display = 'block';
+      
       try {
         const { data, error } = await supabase
           .from('turni')
           .select('*')
           .eq('id', turnoId)
+          .eq('attivo', true)
           .single();
-
+        
         if (error) throw error;
+        if (!data) throw new Error('Turno non trovato');
         
         turnoData = data;
-        mostraInfoTurno(data);
+        
+        // Mostra info turno
+        const postiDisponibili = data.posti_totali - data.posti_occupati;
+        const pieno = postiDisponibili <= 0;
+        
+        turnoInfo.innerHTML = `
+          <h2>${data.nome}</h2>
+          <p class="turno-date">📅 ${formatDate(data.data_inizio)} - ${formatDate(data.data_fine)}</p>
+          <p class="turno-location">📍 ${data.luogo}</p>
+          <div class="status-badge ${pieno ? 'waiting' : 'available'}">
+            ${pieno ? `⏳ Lista d'attesa - Verrai contattato se si libera un posto` : `✓ ${postiDisponibili} posti disponibili`}
+          </div>
+        `;
+        
+        loading.style.display = 'none';
+        turnoInfo.style.display = 'block';
+        form.style.display = 'block';
+        
       } catch (error) {
-        console.error('❌ Errore caricamento turno:', error);
-        alert('Errore nel caricamento del turno');
-        window.location.href = 'index.html';
+        console.error('Errore caricamento turno:', error);
+        loading.style.display = 'none';
+        mostraErrore('Errore caricamento turno: ' + error.message);
       }
     }
-
-    // ========================================
-    // MOSTRA INFO TURNO
-    // ========================================
-    function mostraInfoTurno(turno) {
-      const postiDisponibili = turno.posti_totali - turno.posti_occupati;
-      const infoDiv = document.getElementById('turno-info');
-      
-      const dataInizio = new Date(turno.data_inizio + 'T00:00:00').toLocaleDateString('it-IT', { 
-        day: 'numeric', 
-        month: 'long' 
-      });
-      const dataFine = new Date(turno.data_fine + 'T00:00:00').toLocaleDateString('it-IT', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-      });
-
-      let statusHTML = '';
-      if (postiDisponibili > 0) {
-        statusHTML = `<span class="status-badge available">✓ ${postiDisponibili} posti disponibili</span>`;
-      } else {
-        statusHTML = `<span class="status-badge waiting">Lista d'attesa</span>`;
-      }
-
-      infoDiv.innerHTML = `
-        <h2>${turno.nome}</h2>
-        <p class="turno-date">📅 ${dataInizio} - ${dataFine}</p>
-        <p class="turno-location">📍 ${turno.luogo}</p>
-        ${statusHTML}
-      `;
-    }
-
-    // ========================================
-    // EVENT LISTENERS FORM
-    // ========================================
     
-    // Toggle sezione genitore
-    document.getElementById('maggiorenne').addEventListener('change', function() {
-      const genitoreSection = document.getElementById('genitore-section');
-      const genitoreNome = document.getElementById('genitore_nome');
-      const genitoreCognome = document.getElementById('genitore_cognome');
-      
-      if (this.checked) {
-        genitoreSection.style.display = 'none';
-        genitoreNome.removeAttribute('required');
-        genitoreCognome.removeAttribute('required');
-      } else {
-        genitoreSection.style.display = 'block';
-        genitoreNome.setAttribute('required', 'required');
-        genitoreCognome.setAttribute('required', 'required');
-      }
-    });
-
-    // Inizializza stato maggiorenne
-    document.getElementById('maggiorenne').dispatchEvent(new Event('change'));
-
-    // Toggle allergie
-    document.getElementById('ha_allergie').addEventListener('change', function() {
-      document.getElementById('allergie-desc-group').style.display = this.checked ? 'block' : 'none';
-    });
-
-    // Toggle medicinali
-    document.getElementById('assume_medicinali').addEventListener('change', function() {
-      document.getElementById('medicinali-desc-group').style.display = this.checked ? 'block' : 'none';
-    });
-
-    // ========================================
-    // SUBMIT FORM - VERSIONE CORRETTA
-    // ========================================
-    document.getElementById('iscrizione-form').addEventListener('submit', async function(e) {
+    // Setup form handler
+    function setupForm() {
+      const form = document.getElementById('iscrizione-form');
+      form.addEventListener('submit', handleSubmit);
+    }
+    
+    // Gestione invio form
+    async function handleSubmit(e) {
       e.preventDefault();
-
-      const submitBtn = document.getElementById('submit-btn');
-      const errorDiv = document.getElementById('form-error');
       
+      const submitBtn = document.getElementById('submit-btn');
+      const formError = document.getElementById('form-error');
+      
+      // Disabilita pulsante
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Invio in corso...';
-      errorDiv.style.display = 'none';
-
+      submitBtn.textContent = '⏳ Invio in corso...';
+      formError.style.display = 'none';
+      
       try {
-        console.log('📤 Invio iscrizione...');
-
-        // ========================================
-        // CHIAMATA RPC FUNCTION (fa tutto in una volta)
-        // ========================================
-        const { data, error } = await supabase.rpc('register_iscrizione', {
-          p_turno_id: parseInt(turnoId),
-          p_nome: document.getElementById('nome').value.trim(),
-          p_cognome: document.getElementById('cognome').value.trim(),
-          p_data_nascita: document.getElementById('data_nascita').value,
-          p_luogo_nascita: document.getElementById('luogo_nascita').value.trim(),
-          p_residenza_via: document.getElementById('residenza_via').value.trim(),
-          p_residenza_citta: document.getElementById('residenza_citta').value.trim(),
-          p_maggiorenne: document.getElementById('maggiorenne').checked,
-          p_genitore_nome: document.getElementById('genitore_nome').value.trim() || null,
-          p_genitore_cognome: document.getElementById('genitore_cognome').value.trim() || null,
-          p_email: document.getElementById('email').value.trim(),
-          p_telefono: document.getElementById('telefono').value.trim(),
-          p_ha_allergie: document.getElementById('ha_allergie').checked,
-          p_allergie_desc: document.getElementById('allergie_desc').value.trim() || null,
-          p_assume_medicinali: document.getElementById('assume_medicinali').checked,
-          p_medicinali_desc: document.getElementById('medicinali_desc').value.trim() || null,
-          p_consenso_gdpr: document.getElementById('consenso_gdpr').checked
+        // Raccogli dati form
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Converti checkbox
+        data.consenso_privacy = formData.get('consenso_privacy') === 'on';
+        data.consenso_immagini = formData.get('consenso_immagini') === 'on';
+        
+        // Validazioni base
+        if (!data.consenso_privacy) {
+          throw new Error('Il consenso privacy è obbligatorio');
+        }
+        
+        // Chiama RPC atomica
+        const { data: result, error } = await supabase.rpc('crea_iscrizione', {
+          p_turno_id: turnoId,
+          p_nome: data.nome,
+          p_cognome: data.cognome,
+          p_data_nascita: data.data_nascita,
+          p_sesso: data.sesso,
+          p_email: data.email,
+          p_telefono: data.telefono,
+          p_indirizzo: data.indirizzo,
+          p_citta: data.citta,
+          p_cap: data.cap,
+          p_allergie: data.allergie || null,
+          p_farmaci: data.farmaci || null,
+          p_note_mediche: data.note_mediche || null,
+          p_contatto_emergenza_nome: data.emergenza_nome,
+          p_contatto_emergenza_telefono: data.emergenza_telefono,
+          p_consenso_privacy: data.consenso_privacy,
+          p_consenso_immagini: data.consenso_immagini
         });
-
-        if (error) {
-          console.error('❌ Errore RPC:', error);
-          throw error;
-        }
-
-        console.log('✅ Iscrizione registrata:', data);
-
-        // ========================================
-        // INVIO EMAIL (opzionale, può fallire)
-        // ========================================
-        try {
-          const dataInizio = new Date(turnoData.data_inizio + 'T00:00:00').toLocaleDateString('it-IT', { 
-            day: 'numeric', 
-            month: 'long' 
-          });
-          const dataFine = new Date(turnoData.data_fine + 'T00:00:00').toLocaleDateString('it-IT', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-          });
-
-          console.log('📧 Tentativo invio email...');
-
-          await supabase.functions.invoke('send-email', {
-            body: {
-              to: document.getElementById('email').value.trim(),
-              subject: data.status === 'CONFIRMED'
-                ? '✅ Iscrizione Confermata - Campeggio Estivo'
-                : '⏳ Lista d\'Attesa - Campeggio Estivo',
-              type: data.status === 'CONFIRMED' ? 'CONFERMA' : 'LISTA_ATTESA',
-              data: {
-                nome: document.getElementById('nome').value.trim(),
-                cognome: document.getElementById('cognome').value.trim(),
-                turno_nome: turnoData.nome,
-                date: `${dataInizio} - ${dataFine}`,
-                luogo: turnoData.luogo,
-                posizione: data.posizione
-              }
-            }
-          });
-
-          console.log('✅ Email inviata');
-        } catch (mailError) {
-          console.warn('⚠️ Email non inviata (non bloccante):', mailError.message);
-          // Non bloccare l'iscrizione se l'email fallisce
-        }
-
-        // ========================================
-        // MOSTRA MODAL SUCCESSO
-        // ========================================
-        const modal = document.getElementById('success-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-
-        if (data.status === 'CONFIRMED') {
-          modalTitle.textContent = '✅ Iscrizione confermata!';
-          modalMessage.textContent = `Complimenti! Sei iscritto al ${turnoData.nome}. Riceverai una email di conferma all'indirizzo ${document.getElementById('email').value.trim()}.`;
-        } else {
-          modalTitle.textContent = '⏳ Inserito in lista d\'attesa';
-          modalMessage.textContent = `Il turno è al completo. Sei stato inserito in lista d'attesa alla posizione ${data.posizione}. Ti contatteremo se si libera un posto!`;
-        }
-
-        modal.style.display = 'flex';
-
+        
+        if (error) throw error;
+        if (!result.success) throw new Error(result.error);
+        
+        // Mostra conferma
+        mostraConferma(result);
+        
       } catch (error) {
-        console.error('❌ Errore iscrizione:', error);
-        errorDiv.textContent = `Errore: ${error.message || 'Si è verificato un errore. Riprova o contatta la parrocchia.'}`;
-        errorDiv.style.display = 'block';
+        console.error('Errore iscrizione:', error);
+        formError.textContent = error.message || 'Errore durante l\'iscrizione. Riprova.';
+        formError.style.display = 'block';
+        
+        // Riabilita pulsante
         submitBtn.disabled = false;
         submitBtn.textContent = 'Conferma Iscrizione';
       }
-    });
-
-    // ========================================
-    // INIZIALIZZAZIONE
-    // ========================================
-    caricaTurno();
+    }
+    
+    // Mostra modal conferma
+    function mostraConferma(result) {
+      const modal = document.getElementById('modal-conferma');
+      const title = document.getElementById('modal-title');
+      const message = document.getElementById('modal-message');
+      
+      if (result.status === 'CONFIRMED') {
+        title.textContent = '🎉 Iscrizione Confermata!';
+        message.innerHTML = `
+          <p><strong>${result.turno_nome}</strong></p>
+          <p>📍 ${result.turno_luogo}</p>
+          <p>Riceverai una email di conferma all'indirizzo fornito.</p>
+          <p style="margin-top: 15px; color: #4CAF50; font-weight: 600;">Il tuo posto è confermato!</p>
+        `;
+      } else {
+        title.textContent = '⏳ Inserito in Lista d\'Attesa';
+        message.innerHTML = `
+          <p><strong>${result.turno_nome}</strong></p>
+          <p>Posizione in lista: <strong>${result.posizione_lista}</strong></p>
+          <p>Ti contatteremo se si libera un posto.</p>
+          <p style="margin-top: 15px; font-size: 0.95rem;">Riceverai una email di conferma.</p>
+        `;
+      }
+      
+      modal.style.display = 'flex';
+    }
+    
+    // Utility
+    function formatDate(dateString) {
+      const date = new Date(dateString + 'T00:00:00');
+      return date.toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+    
+    function mostraErrore(msg) {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+    }
+    
+    window.tornaHome = function() {
+      window.location.href = 'index.html';
+    };
+    
+    // Avvia
+    init();
   </script>
 </body>
 </html>

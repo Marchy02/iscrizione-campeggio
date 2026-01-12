@@ -1,0 +1,184 @@
+# PROGETTO: Sistema iscrizioni campeggi parrocchiali – Problemi attuali e requisiti
+
+## Contesto generale
+
+Sto sviluppando un sistema web per gestire le iscrizioni ai campeggi estivi parrocchiali con:
+
+* 3 turni distinti
+* 30 posti disponibili per ogni turno
+* lista d’attesa automatica per ogni turno
+* sito pubblico per i genitori
+* pannello amministratore
+* database Supabase
+* hosting statico (GitHub Pages)
+* email automatiche di conferma e lista d’attesa
+
+Il progetto attuale **non è stabile né affidabile** e necessita di una rigenerazione completa.
+
+---
+
+## Problemi principali riscontrati
+
+### 1. Le iscrizioni falliscono in modo intermittente
+
+L’invio del modulo:
+
+* a volte calcola correttamente lo stato (CONFIRMED / WAITING_LIST)
+* ma spesso fallisce nel salvataggio nel database
+* con errori HTTP 400 / 401
+* e violazioni di vincoli SQL (campi NOT NULL mancanti)
+
+Risultato: il genitore vede la conferma ma l’iscrizione non viene realmente salvata.
+
+---
+
+### 2. Backend e database non sono allineati
+
+La struttura del database richiede molti campi obbligatori (dati anagrafici, contatti, consenso GDPR, ecc.), ma:
+
+* la logica di inserimento non fornisce sempre tutti i dati
+* la funzione di registrazione non gestisce correttamente tutti i campi
+* i tipi dei dati non sono sempre coerenti
+
+Questo causa errori strutturali e perdita di dati.
+
+---
+
+### 3. Gestione lista d’attesa fragile
+
+Attualmente:
+
+* la lista d’attesa non è garantita per turno in modo affidabile
+* la posizione non è sempre calcolata correttamente
+* non è garantita la promozione automatica quando un posto si libera
+* non è garantito l’ordine cronologico corretto
+
+---
+
+### 4. Problemi di sicurezza e permessi (RLS)
+
+L’architettura attuale ha:
+
+* conflitti tra accesso pubblico e accesso admin
+* tentativi diretti di scrittura sulle tabelle
+* policy modificate più volte senza una struttura chiara
+* rischio di blocchi improvvisi o comportamenti incoerenti
+
+Serve una separazione netta:
+
+* utenti pubblici → solo richiesta di iscrizione
+* amministratori → gestione completa
+* logica critica solo lato database
+
+---
+
+### 5. Email automatiche non affidabili
+
+È richiesto che:
+
+* ogni iscrizione confermata riceva email automatica
+* ogni persona in lista d’attesa riceva email automatica
+* quando una persona viene promossa dalla lista d’attesa → riceva nuova email
+* le email siano affidabili, asincrone e non blocchino la registrazione
+
+Attualmente questo flusso non è stabile né completamente funzionante.
+
+---
+
+### 6. Logica distribuita e duplicata
+
+Ora la logica è spezzata tra:
+
+* frontend (calcolo posti)
+* backend (calcolo posti)
+* database
+
+Questo genera:
+
+* incoerenze
+* race condition possibili
+* difficoltà di manutenzione
+* risultati non deterministici sotto carico
+
+---
+
+## Requisiti funzionali corretti
+
+Il sistema finale deve garantire:
+
+### Iscrizione
+
+* scelta turno
+* inserimento dati completi
+* determinazione atomica dello stato:
+
+  * CONFIRMED se posti disponibili
+  * WAITING_LIST se esauriti
+* assegnazione posizione lista d’attesa per turno
+
+### Lista d’attesa
+
+* separata per ogni turno
+* ordinata correttamente
+* promozione automatica quando un posto si libera
+* aggiornamento stato
+
+### Email automatiche
+
+* conferma iscrizione
+* notifica lista d’attesa
+* notifica promozione
+* email affidabili e gratuite (es. Resend o equivalente)
+
+### Amministrazione
+
+* login admin
+* visualizzazione iscritti per turno
+* visualizzazione lista d’attesa
+* cancellazione iscrizioni
+* promozione manuale/automatica
+
+### Sicurezza
+
+* nessuna scrittura diretta alle tabelle dal frontend
+* controllo completo lato database
+* policy RLS corrette
+* separazione pubblico / admin
+
+---
+
+## Requisiti tecnici
+
+* Supabase (PostgreSQL + RPC + RLS)
+* frontend statico (HTML/CSS/JS)
+* hosting gratuito
+* nessun server proprietario
+* nessuna carta di credito
+* compatibile GitHub Pages
+* solo JavaScript vanilla
+
+---
+
+## Requisiti UI
+
+* family friendly
+* colori pastello
+* stile semplice e rassicurante
+* mobile first
+* accessibile a utenti poco tecnici
+* font tipo Nunito / Quicksand
+
+---
+
+## Obiettivo finale
+
+Sistema stabile che:
+
+* non perde iscrizioni
+* non supera mai il numero massimo di posti
+* gestisce correttamente la lista d’attesa
+* invia email corrette
+* è semplice per gli utenti
+* è semplice da amministrare
+* è sicuro
+

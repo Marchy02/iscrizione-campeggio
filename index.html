@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campeggi Estivi - Parrocchia</title>
+  <title>Campeggi Estivi 2025 - Parrocchia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,13 +19,22 @@
     </header>
 
     <main class="main-content">
+      <!-- Introduzione -->
       <section class="intro-section">
         <div class="intro-card">
           <h2>Vieni con noi in vacanza! ☀️</h2>
-          <p>Quest'estate organizziamo tre fantastici turni di campeggio per bambini e ragazzi. Divertimento, amicizia, natura e tanto altro!</p>
+          <p>
+            Quest'estate organizziamo tre fantastici turni di campeggio per bambini e ragazzi. 
+            Divertimento, amicizia, natura e tanto altro ti aspettano!
+          </p>
+          <p style="margin-top: 15px; font-size: 0.95rem; color: #8D6E63;">
+            <strong>Nota:</strong> Se i posti sono esauriti, puoi comunque iscriverti alla lista d'attesa. 
+            Ti contatteremo se si libera un posto!
+          </p>
         </div>
       </section>
 
+      <!-- Turni -->
       <section class="turni-section">
         <h2 class="section-title">Scegli il tuo turno</h2>
         <div id="turni-container" class="turni-grid">
@@ -33,11 +42,13 @@
         </div>
       </section>
 
+      <!-- Loading -->
       <div id="loading" class="loading" style="display: none;">
         <div class="spinner"></div>
         <p>Caricamento turni...</p>
       </div>
 
+      <!-- Errore -->
       <div id="error-message" class="error-banner" style="display: none;"></div>
     </main>
 
