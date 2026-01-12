@@ -176,7 +176,6 @@
     const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
 
-
     // Import Supabase
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -285,7 +284,7 @@
     });
 
     // ========================================
-    // SUBMIT FORM
+    // SUBMIT FORM - VERSIONE CORRETTA
     // ========================================
     document.getElementById('iscrizione-form').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -297,110 +296,41 @@
       submitBtn.textContent = 'Invio in corso...';
       errorDiv.style.display = 'none';
 
-      // Raccolta dati form
-      const formData = {
-        turno_id: parseInt(turnoId),
-        nome: document.getElementById('nome').value.trim(),
-        cognome: document.getElementById('cognome').value.trim(),
-        data_nascita: document.getElementById('data_nascita').value,
-        luogo_nascita: document.getElementById('luogo_nascita').value.trim(),
-        residenza_via: document.getElementById('residenza_via').value.trim(),
-        residenza_citta: document.getElementById('residenza_citta').value.trim(),
-        maggiorenne: document.getElementById('maggiorenne').checked,
-        genitore_nome: document.getElementById('genitore_nome').value.trim() || null,
-        genitore_cognome: document.getElementById('genitore_cognome').value.trim() || null,
-        email: document.getElementById('email').value.trim(),
-        telefono: document.getElementById('telefono').value.trim(),
-        ha_allergie: document.getElementById('ha_allergie').checked,
-        allergie_desc: document.getElementById('allergie_desc').value.trim() || null,
-        assume_medicinali: document.getElementById('assume_medicinali').checked,
-        medicinali_desc: document.getElementById('medicinali_desc').value.trim() || null,
-        consenso_gdpr: document.getElementById('consenso_gdpr').checked
-      };
-
-      console.log('📤 Invio iscrizione:', formData);
-
       try {
-        // ========================================
-        // 1. VERIFICA POSTI DISPONIBILI
-        // ========================================
-        const { data: turnoAggiornato, error: turnoError } = await supabase
-          .from('turni')
-          .select('posti_totali, posti_occupati')
-          .eq('id', turnoId)
-          .single();
-
-        if (turnoError) {
-          console.error('❌ Errore verifica posti:', turnoError);
-          throw turnoError;
-        }
-
-        const postiDisponibili = turnoAggiornato.posti_totali - turnoAggiornato.posti_occupati;
-        console.log(`📊 Posti disponibili: ${postiDisponibili}`);
-        
-        // ========================================
-        // 2. DETERMINA STATUS E POSIZIONE
-        // ========================================
-        let statusFinal = '';
-        let posizioneListaFinal = null;
-        
-        if (postiDisponibili > 0) {
-          // POSTO DISPONIBILE
-          formData.status = 'CONFIRMED';
-          formData.posizione_lista = null;
-          statusFinal = 'CONFIRMED';
-          console.log('✅ Status: CONFIRMED');
-        } else {
-          // LISTA D'ATTESA
-          const { count, error: countError } = await supabase
-            .from('iscrizioni')
-            .select('*', { count: 'exact', head: true })
-            .eq('turno_id', turnoId)
-            .eq('status', 'WAITING_LIST');
-
-          if (countError) {
-            console.error('❌ Errore conteggio lista:', countError);
-            throw countError;
-          }
-
-          posizioneListaFinal = (count || 0) + 1;
-          formData.status = 'WAITING_LIST';
-          formData.posizione_lista = posizioneListaFinal;
-          statusFinal = 'WAITING_LIST';
-          console.log(`⏳ Status: WAITING_LIST - Posizione ${posizioneListaFinal}`);
-        }
+        console.log('📤 Invio iscrizione...');
 
         // ========================================
-        // 3. INSERISCI ISCRIZIONE
+        // CHIAMATA RPC FUNCTION (fa tutto in una volta)
         // ========================================
         const { data, error } = await supabase.rpc('register_iscrizione', {
-          p_turno_id: formData.turno_id,
-          p_nome: formData.nome,
-          p_cognome: formData.cognome,
-          p_email: formData.email
+          p_turno_id: parseInt(turnoId),
+          p_nome: document.getElementById('nome').value.trim(),
+          p_cognome: document.getElementById('cognome').value.trim(),
+          p_data_nascita: document.getElementById('data_nascita').value,
+          p_luogo_nascita: document.getElementById('luogo_nascita').value.trim(),
+          p_residenza_via: document.getElementById('residenza_via').value.trim(),
+          p_residenza_citta: document.getElementById('residenza_citta').value.trim(),
+          p_maggiorenne: document.getElementById('maggiorenne').checked,
+          p_genitore_nome: document.getElementById('genitore_nome').value.trim() || null,
+          p_genitore_cognome: document.getElementById('genitore_cognome').value.trim() || null,
+          p_email: document.getElementById('email').value.trim(),
+          p_telefono: document.getElementById('telefono').value.trim(),
+          p_ha_allergie: document.getElementById('ha_allergie').checked,
+          p_allergie_desc: document.getElementById('allergie_desc').value.trim() || null,
+          p_assume_medicinali: document.getElementById('assume_medicinali').checked,
+          p_medicinali_desc: document.getElementById('medicinali_desc').value.trim() || null,
+          p_consenso_gdpr: document.getElementById('consenso_gdpr').checked
         });
 
         if (error) {
-          console.error("Errore RPC:", error);
-          alert("Errore durante l'iscrizione");
-          return;
+          console.error('❌ Errore RPC:', error);
+          throw error;
         }
 
-        if (data.status === "CONFIRMED") {
-          alert("Iscrizione confermata!");
-        } else {
-          alert("Inserito in lista di attesa. Posizione: " + data.posizione);
-        }
-
-        if (inscriptionError) {
-          console.error('❌ Errore inserimento:', inscriptionError);
-          throw inscriptionError;
-        }
-
-        console.log('✅ Iscrizione creata con successo');
+        console.log('✅ Iscrizione registrata:', data);
 
         // ========================================
-        // 4. INVIA EMAIL AUTOMATICA
+        // INVIO EMAIL (opzionale, può fallire)
         // ========================================
         try {
           const dataInizio = new Date(turnoData.data_inizio + 'T00:00:00').toLocaleDateString('it-IT', { 
@@ -413,53 +343,50 @@
             year: 'numeric' 
           });
 
-          console.log('📧 Invio email...');
+          console.log('📧 Tentativo invio email...');
 
           await supabase.functions.invoke('send-email', {
             body: {
-              to: formData.email,
-              subject: statusFinal === 'CONFIRMED'
+              to: document.getElementById('email').value.trim(),
+              subject: data.status === 'CONFIRMED'
                 ? '✅ Iscrizione Confermata - Campeggio Estivo'
                 : '⏳ Lista d\'Attesa - Campeggio Estivo',
-              type: statusFinal === 'CONFIRMED' ? 'CONFERMA' : 'LISTA_ATTESA',
+              type: data.status === 'CONFIRMED' ? 'CONFERMA' : 'LISTA_ATTESA',
               data: {
-                nome: formData.nome,
-                cognome: formData.cognome,
+                nome: document.getElementById('nome').value.trim(),
+                cognome: document.getElementById('cognome').value.trim(),
                 turno_nome: turnoData.nome,
                 date: `${dataInizio} - ${dataFine}`,
                 luogo: turnoData.luogo,
-                posizione: posizioneListaFinal
+                posizione: data.posizione
               }
             }
           });
 
-          console.log('✅ Email inviata con successo');
+          console.log('✅ Email inviata');
         } catch (mailError) {
-          console.error('⚠️ Errore invio email (non bloccante):', mailError);
+          console.warn('⚠️ Email non inviata (non bloccante):', mailError.message);
           // Non bloccare l'iscrizione se l'email fallisce
         }
 
         // ========================================
-        // 5. MOSTRA MODAL SUCCESSO
+        // MOSTRA MODAL SUCCESSO
         // ========================================
         const modal = document.getElementById('success-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
 
-        if (statusFinal === 'CONFIRMED') {
+        if (data.status === 'CONFIRMED') {
           modalTitle.textContent = '✅ Iscrizione confermata!';
-          modalMessage.textContent = `Complimenti! Sei iscritto al ${turnoData.nome}. Riceverai una email di conferma all'indirizzo ${formData.email}.`;
+          modalMessage.textContent = `Complimenti! Sei iscritto al ${turnoData.nome}. Riceverai una email di conferma all'indirizzo ${document.getElementById('email').value.trim()}.`;
         } else {
           modalTitle.textContent = '⏳ Inserito in lista d\'attesa';
-          modalMessage.textContent = `Il turno è al completo. Sei stato inserito in lista d'attesa alla posizione ${posizioneListaFinal}. Ti contatteremo se si libera un posto!`;
+          modalMessage.textContent = `Il turno è al completo. Sei stato inserito in lista d'attesa alla posizione ${data.posizione}. Ti contatteremo se si libera un posto!`;
         }
 
         modal.style.display = 'flex';
 
       } catch (error) {
-        // ========================================
-        // GESTIONE ERRORI
-        // ========================================
         console.error('❌ Errore iscrizione:', error);
         errorDiv.textContent = `Errore: ${error.message || 'Si è verificato un errore. Riprova o contatta la parrocchia.'}`;
         errorDiv.style.display = 'block';
