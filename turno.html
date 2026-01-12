@@ -272,58 +272,66 @@
     }
     
     function setupConditionalFields() {
-      // Mostra/nascondi dati genitore
-      const maggiorenneCheck = document.getElementById('e_maggiorenne');
-      const datiGenitoreSection = document.getElementById('dati-genitore-section');
-      const nomeGenitoreInput = document.getElementById('nome_genitore');
-      const cognomeGenitoreInput = document.getElementById('cognome_genitore');
-      
-      maggiorenneCheck.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          datiGenitoreSection.style.display = 'none';
-          nomeGenitoreInput.required = false;
-          cognomeGenitoreInput.required = false;
-          nomeGenitoreInput.value = '';
-          cognomeGenitoreInput.value = '';
-        } else {
-          datiGenitoreSection.style.display = 'block';
-          nomeGenitoreInput.required = true;
-          cognomeGenitoreInput.required = true;
-        }
-      });
-      
-      // Mostra/nascondi allergie
-      const allergieCheck = document.getElementById('ha_allergie');
-      const allergieDetail = document.getElementById('allergie-detail');
-      const allergieTextarea = document.getElementById('descrizione_allergie');
-      
-      allergieCheck.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          allergieDetail.style.display = 'block';
-          allergieTextarea.required = true;
-        } else {
-          allergieDetail.style.display = 'none';
-          allergieTextarea.required = false;
-          allergieTextarea.value = '';
-        }
-      });
-      
-      // Mostra/nascondi medicinali
-      const medicinaliCheck = document.getElementById('ha_medicinali');
-      const medicinaliDetail = document.getElementById('medicinali-detail');
-      const medicinaliTextarea = document.getElementById('descrizione_medicinali');
-      
-      medicinaliCheck.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          medicinaliDetail.style.display = 'block';
-          medicinaliTextarea.required = true;
-        } else {
-          medicinaliDetail.style.display = 'none';
-          medicinaliTextarea.required = false;
-          medicinaliTextarea.value = '';
-        }
-      });
+    const maggiorenneCheck = document.getElementById('e_maggiorenne');
+    const datiGenitoreSection = document.getElementById('dati-genitore-section');
+    const nomeGenitoreInput = document.getElementById('nome_genitore');
+    const cognomeGenitoreInput = document.getElementById('cognome_genitore');
+
+    function aggiornaStatoGenitore() {
+      if (maggiorenneCheck.checked) {
+        // maggiorenne → nascondi
+        datiGenitoreSection.style.display = 'none';
+        nomeGenitoreInput.required = false;
+        cognomeGenitoreInput.required = false;
+        nomeGenitoreInput.value = '';
+        cognomeGenitoreInput.value = '';
+      } else {
+        // minorenne → mostra
+        datiGenitoreSection.style.display = 'block';
+        nomeGenitoreInput.required = true;
+        cognomeGenitoreInput.required = true;
+      }
     }
+
+    // evento
+    maggiorenneCheck.addEventListener('change', aggiornaStatoGenitore);
+
+    // stato iniziale
+    aggiornaStatoGenitore();
+
+    // allergie
+    const allergieCheck = document.getElementById('ha_allergie');
+    const allergieDetail = document.getElementById('allergie-detail');
+    const allergieTextarea = document.getElementById('descrizione_allergie');
+
+    allergieCheck.addEventListener('change', () => {
+      if (allergieCheck.checked) {
+        allergieDetail.style.display = 'block';
+        allergieTextarea.required = true;
+      } else {
+        allergieDetail.style.display = 'none';
+        allergieTextarea.required = false;
+        allergieTextarea.value = '';
+      }
+    });
+
+    // medicinali
+    const medicinaliCheck = document.getElementById('ha_medicinali');
+    const medicinaliDetail = document.getElementById('medicinali-detail');
+    const medicinaliTextarea = document.getElementById('descrizione_medicinali');
+
+    medicinaliCheck.addEventListener('change', () => {
+      if (medicinaliCheck.checked) {
+        medicinaliDetail.style.display = 'block';
+        medicinaliTextarea.required = true;
+      } else {
+        medicinaliDetail.style.display = 'none';
+        medicinaliTextarea.required = false;
+        medicinaliTextarea.value = '';
+      }
+    });
+  }
+
     
     function setupForm() {
       const form = document.getElementById('iscrizione-form');
