@@ -207,7 +207,7 @@
         
         await caricaTurno();
         setupForm();
-        setupConditionalFields();
+        triggerInitialMinorCheck();
         
       } catch (error) {
         console.error('Errore init:', error);
@@ -215,6 +215,19 @@
       }
     }
     
+    function triggerInitialMinorCheck() {
+    const maggiorenneCheck = document.getElementById('e_maggiorenne');
+    const datiGenitoreSection = document.getElementById('dati-genitore-section');
+    const nomeGenitoreInput = document.getElementById('nome_genitore');
+    const cognomeGenitoreInput = document.getElementById('cognome_genitore');
+
+    if (!maggiorenneCheck.checked) {
+      datiGenitoreSection.style.display = 'block';
+      nomeGenitoreInput.required = true;
+      cognomeGenitoreInput.required = true;
+    }
+    }
+
     async function caricaTurno() {
       const loading = document.getElementById('loading');
       const turnoInfo = document.getElementById('turno-info');
