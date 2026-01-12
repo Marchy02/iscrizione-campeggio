@@ -19,23 +19,17 @@
     </header>
 
     <main class="main-content">
-      <!-- Loading -->
       <div id="loading" class="loading" style="display: none;">
         <div class="spinner"></div>
         <p>Caricamento...</p>
       </div>
 
-      <!-- Errore -->
       <div id="error-message" class="error-banner" style="display: none;"></div>
 
-      <!-- Info Turno -->
-      <div id="turno-info" class="turno-info-card" style="display: none;">
-        <!-- Caricato dinamicamente -->
-      </div>
+      <div id="turno-info" class="turno-info-card" style="display: none;"></div>
 
-      <!-- Form Iscrizione -->
       <form id="iscrizione-form" class="iscrizione-form" style="display: none;">
-        <!-- Dati Partecipante -->
+        <!-- DATI PARTECIPANTE -->
         <div class="form-section">
           <h3>👤 Dati Partecipante</h3>
           <div class="form-row">
@@ -54,17 +48,55 @@
               <input type="date" id="data_nascita" name="data_nascita" required>
             </div>
             <div class="form-group">
-              <label for="sesso">Sesso *</label>
-              <select id="sesso" name="sesso" required>
-                <option value="">Seleziona...</option>
-                <option value="M">Maschio</option>
-                <option value="F">Femmina</option>
-              </select>
+              <label for="luogo_nascita">Luogo di Nascita *</label>
+              <input type="text" id="luogo_nascita" name="luogo_nascita" required>
             </div>
           </div>
         </div>
 
-        <!-- Contatti -->
+        <!-- RESIDENZA -->
+        <div class="form-section">
+          <h3>🏠 Residenza</h3>
+          <div class="form-group">
+            <label for="indirizzo">Via *</label>
+            <input type="text" id="indirizzo" name="indirizzo" required>
+          </div>
+          <div class="form-group">
+            <label for="citta">Città *</label>
+            <input type="text" id="citta" name="citta" required>
+          </div>
+        </div>
+
+        <!-- MAGGIORENNE -->
+        <div class="form-section">
+          <h3>📋 Info Legali</h3>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="e_maggiorenne" name="e_maggiorenne">
+              <span><strong>Il partecipante è maggiorenne</strong></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- DATI GENITORE/TUTORE (se minorenne) -->
+        <div id="dati-genitore-section" class="form-section" style="display: none;">
+          <h3>👨‍👩‍👧 Dati Genitore/Tutore</h3>
+          <p style="color: #F57C00; font-size: 0.95rem; margin-bottom: 15px;">
+            ⚠️ Richiesti per minorenni
+          </p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome_genitore">Nome Genitore/Tutore *</label>
+              <input type="text" id="nome_genitore" name="nome_genitore">
+            </div>
+            <div class="form-group">
+              <label for="cognome_genitore">Cognome Genitore/Tutore *</label>
+              <input type="text" id="cognome_genitore" name="cognome_genitore">
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTATTI -->
         <div class="form-section">
           <h3>📧 Contatti</h3>
           <div class="form-group">
@@ -75,96 +107,63 @@
           <div class="form-group">
             <label for="telefono">Telefono *</label>
             <input type="tel" id="telefono" name="telefono" required>
-            <small>Formato: 333-1234567</small>
+            <small>Formato: 333-1234567 o 3331234567</small>
           </div>
         </div>
 
-        <!-- Residenza -->
+        <!-- DATI SANITARI -->
         <div class="form-section">
-          <h3>🏠 Residenza</h3>
-          <div class="form-group">
-            <label for="indirizzo">Indirizzo *</label>
-            <input type="text" id="indirizzo" name="indirizzo" required>
+          <h3>🏥 Informazioni Sanitarie</h3>
+          
+          <div class="checkbox-group" style="margin-bottom: 15px;">
+            <label>
+              <input type="checkbox" id="ha_allergie" name="ha_allergie">
+              <span><strong>Il partecipante ha allergie o patologie</strong></span>
+            </label>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="citta">Città *</label>
-              <input type="text" id="citta" name="citta" required>
-            </div>
-            <div class="form-group">
-              <label for="cap">CAP *</label>
-              <input type="text" id="cap" name="cap" required pattern="[0-9]{5}">
-            </div>
+          
+          <div id="allergie-detail" class="form-group" style="display: none;">
+            <label for="descrizione_allergie">Descrizione allergie/patologie *</label>
+            <textarea id="descrizione_allergie" name="descrizione_allergie" rows="3"></textarea>
+            <small>Specifica allergie alimentari, intolleranze, patologie croniche, ecc.</small>
+          </div>
+
+          <div class="checkbox-group" style="margin-bottom: 15px;">
+            <label>
+              <input type="checkbox" id="ha_medicinali" name="ha_medicinali">
+              <span><strong>Il partecipante deve assumere medicinali</strong></span>
+            </label>
+          </div>
+          
+          <div id="medicinali-detail" class="form-group" style="display: none;">
+            <label for="descrizione_medicinali">Descrizione medicinali (dose/orari) *</label>
+            <textarea id="descrizione_medicinali" name="descrizione_medicinali" rows="3"></textarea>
+            <small>Indica nome medicinale, dosaggio e orari di assunzione</small>
           </div>
         </div>
 
-        <!-- Informazioni Mediche -->
+        <!-- CONSENSO GDPR -->
         <div class="form-section">
-          <h3>🏥 Informazioni Mediche</h3>
-          <div class="form-group">
-            <label for="allergie">Allergie</label>
-            <textarea id="allergie" name="allergie" rows="2"></textarea>
-            <small>Indica eventuali allergie alimentari o di altro tipo</small>
-          </div>
-          <div class="form-group">
-            <label for="farmaci">Farmaci</label>
-            <textarea id="farmaci" name="farmaci" rows="2"></textarea>
-            <small>Farmaci assunti regolarmente</small>
-          </div>
-          <div class="form-group">
-            <label for="note_mediche">Note Mediche</label>
-            <textarea id="note_mediche" name="note_mediche" rows="2"></textarea>
-            <small>Altre informazioni mediche importanti</small>
-          </div>
-        </div>
-
-        <!-- Contatto Emergenza -->
-        <div class="form-section">
-          <h3>🚨 Contatto di Emergenza</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="emergenza_nome">Nome e Cognome *</label>
-              <input type="text" id="emergenza_nome" name="emergenza_nome" required>
-            </div>
-            <div class="form-group">
-              <label for="emergenza_telefono">Telefono *</label>
-              <input type="tel" id="emergenza_telefono" name="emergenza_telefono" required>
-            </div>
-          </div>
-        </div>
-
-        <!-- Consensi -->
-        <div class="form-section">
-          <h3>✓ Consensi</h3>
+          <h3>✓ Consenso Obbligatorio</h3>
           <div class="checkbox-group">
             <label class="gdpr-label">
-              <input type="checkbox" id="consenso_privacy" name="consenso_privacy" required>
+              <input type="checkbox" id="consenso_gdpr" name="consenso_gdpr" required>
               <span>
-                <strong>Accetto il trattamento dei dati personali *</strong><br>
-                Dichiaro di aver letto e accettato l'informativa sulla privacy ai sensi del GDPR.
-                I dati saranno utilizzati esclusivamente per la gestione dell'iscrizione al campeggio.
-              </span>
-            </label>
-          </div>
-          <div class="checkbox-group">
-            <label>
-              <input type="checkbox" id="consenso_immagini" name="consenso_immagini">
-              <span>
-                Autorizzo l'utilizzo di foto e video realizzati durante il campeggio 
-                per scopi di documentazione e comunicazione della parrocchia.
+                <strong>Accetto il trattamento dei dati personali (GDPR) *</strong><br>
+                Dichiaro di aver letto e accettato l'informativa sulla privacy ai sensi del GDPR (Regolamento UE 2016/679).
+                I dati saranno utilizzati esclusivamente per la gestione dell'iscrizione al campeggio e per le finalità sanitarie necessarie.
               </span>
             </label>
           </div>
         </div>
 
-        <!-- Pulsante Invio -->
+        <!-- PULSANTE INVIO -->
         <div class="form-actions">
           <button type="submit" id="submit-btn" class="btn-primary">
             Conferma Iscrizione
           </button>
         </div>
 
-        <!-- Messaggio Errore Form -->
         <div id="form-error" class="error-message" style="display: none;"></div>
       </form>
     </main>
@@ -185,10 +184,6 @@
   </div>
 
   <script type="module">
-    // ============================================
-    // TURNO.HTML - Script Inline
-    // ============================================
-    
     const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
     
@@ -196,10 +191,8 @@
     let turnoId;
     let turnoData;
     
-    // Inizializzazione
     async function init() {
       try {
-        // Ottieni ID turno da URL
         const params = new URLSearchParams(window.location.search);
         turnoId = parseInt(params.get('id'));
         
@@ -209,15 +202,12 @@
           return;
         }
         
-        // Setup Supabase
         const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Carica turno
         await caricaTurno();
-        
-        // Setup form
         setupForm();
+        setupConditionalFields();
         
       } catch (error) {
         console.error('Errore init:', error);
@@ -225,7 +215,6 @@
       }
     }
     
-    // Carica informazioni turno
     async function caricaTurno() {
       const loading = document.getElementById('loading');
       const turnoInfo = document.getElementById('turno-info');
@@ -246,7 +235,6 @@
         
         turnoData = data;
         
-        // Mostra info turno
         const postiDisponibili = data.posti_totali - data.posti_occupati;
         const pieno = postiDisponibili <= 0;
         
@@ -270,63 +258,115 @@
       }
     }
     
-    // Setup form handler
+    function setupConditionalFields() {
+      // Mostra/nascondi dati genitore
+      const maggiorenneCheck = document.getElementById('e_maggiorenne');
+      const datiGenitoreSection = document.getElementById('dati-genitore-section');
+      const nomeGenitoreInput = document.getElementById('nome_genitore');
+      const cognomeGenitoreInput = document.getElementById('cognome_genitore');
+      
+      maggiorenneCheck.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          datiGenitoreSection.style.display = 'none';
+          nomeGenitoreInput.required = false;
+          cognomeGenitoreInput.required = false;
+          nomeGenitoreInput.value = '';
+          cognomeGenitoreInput.value = '';
+        } else {
+          datiGenitoreSection.style.display = 'block';
+          nomeGenitoreInput.required = true;
+          cognomeGenitoreInput.required = true;
+        }
+      });
+      
+      // Mostra/nascondi allergie
+      const allergieCheck = document.getElementById('ha_allergie');
+      const allergieDetail = document.getElementById('allergie-detail');
+      const allergieTextarea = document.getElementById('descrizione_allergie');
+      
+      allergieCheck.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          allergieDetail.style.display = 'block';
+          allergieTextarea.required = true;
+        } else {
+          allergieDetail.style.display = 'none';
+          allergieTextarea.required = false;
+          allergieTextarea.value = '';
+        }
+      });
+      
+      // Mostra/nascondi medicinali
+      const medicinaliCheck = document.getElementById('ha_medicinali');
+      const medicinaliDetail = document.getElementById('medicinali-detail');
+      const medicinaliTextarea = document.getElementById('descrizione_medicinali');
+      
+      medicinaliCheck.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          medicinaliDetail.style.display = 'block';
+          medicinaliTextarea.required = true;
+        } else {
+          medicinaliDetail.style.display = 'none';
+          medicinaliTextarea.required = false;
+          medicinaliTextarea.value = '';
+        }
+      });
+    }
+    
     function setupForm() {
       const form = document.getElementById('iscrizione-form');
       form.addEventListener('submit', handleSubmit);
     }
     
-    // Gestione invio form
     async function handleSubmit(e) {
       e.preventDefault();
       
       const submitBtn = document.getElementById('submit-btn');
       const formError = document.getElementById('form-error');
       
-      // Disabilita pulsante
       submitBtn.disabled = true;
       submitBtn.textContent = '⏳ Invio in corso...';
       formError.style.display = 'none';
       
       try {
-        // Raccogli dati form
         const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
         
-        // Converti checkbox
-        data.consenso_privacy = formData.get('consenso_privacy') === 'on';
-        data.consenso_immagini = formData.get('consenso_immagini') === 'on';
+        // Raccogli dati
+        const data = {
+          p_turno_id: turnoId,
+          p_nome: formData.get('nome'),
+          p_cognome: formData.get('cognome'),
+          p_data_nascita: formData.get('data_nascita'),
+          p_luogo_nascita: formData.get('luogo_nascita'),
+          p_indirizzo: formData.get('indirizzo'),
+          p_citta: formData.get('citta'),
+          p_e_maggiorenne: formData.get('e_maggiorenne') === 'on',
+          p_nome_genitore: formData.get('nome_genitore') || null,
+          p_cognome_genitore: formData.get('cognome_genitore') || null,
+          p_email: formData.get('email'),
+          p_telefono: formData.get('telefono'),
+          p_ha_allergie: formData.get('ha_allergie') === 'on',
+          p_descrizione_allergie: formData.get('descrizione_allergie') || null,
+          p_ha_medicinali: formData.get('ha_medicinali') === 'on',
+          p_descrizione_medicinali: formData.get('descrizione_medicinali') || null,
+          p_consenso_gdpr: formData.get('consenso_gdpr') === 'on'
+        };
         
-        // Validazioni base
-        if (!data.consenso_privacy) {
-          throw new Error('Il consenso privacy è obbligatorio');
+        console.log('Invio dati:', data);
+        
+        // Chiama RPC
+        const { data: result, error } = await supabase.rpc('crea_iscrizione', data);
+        
+        if (error) {
+          console.error('Errore RPC:', error);
+          throw error;
         }
         
-        // Chiama RPC atomica
-        const { data: result, error } = await supabase.rpc('crea_iscrizione', {
-          p_turno_id: turnoId,
-          p_nome: data.nome,
-          p_cognome: data.cognome,
-          p_data_nascita: data.data_nascita,
-          p_sesso: data.sesso,
-          p_email: data.email,
-          p_telefono: data.telefono,
-          p_indirizzo: data.indirizzo,
-          p_citta: data.citta,
-          p_cap: data.cap,
-          p_allergie: data.allergie || null,
-          p_farmaci: data.farmaci || null,
-          p_note_mediche: data.note_mediche || null,
-          p_contatto_emergenza_nome: data.emergenza_nome,
-          p_contatto_emergenza_telefono: data.emergenza_telefono,
-          p_consenso_privacy: data.consenso_privacy,
-          p_consenso_immagini: data.consenso_immagini
-        });
+        console.log('Risultato:', result);
         
-        if (error) throw error;
-        if (!result.success) throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
         
-        // Mostra conferma
         mostraConferma(result);
         
       } catch (error) {
@@ -334,13 +374,11 @@
         formError.textContent = error.message || 'Errore durante l\'iscrizione. Riprova.';
         formError.style.display = 'block';
         
-        // Riabilita pulsante
         submitBtn.disabled = false;
         submitBtn.textContent = 'Conferma Iscrizione';
       }
     }
     
-    // Mostra modal conferma
     function mostraConferma(result) {
       const modal = document.getElementById('modal-conferma');
       const title = document.getElementById('modal-title');
@@ -351,23 +389,23 @@
         message.innerHTML = `
           <p><strong>${result.turno_nome}</strong></p>
           <p>📍 ${result.turno_luogo}</p>
-          <p>Riceverai una email di conferma all'indirizzo fornito.</p>
-          <p style="margin-top: 15px; color: #4CAF50; font-weight: 600;">Il tuo posto è confermato!</p>
+          <p>📅 ${formatDate(result.data_inizio)} - ${formatDate(result.data_fine)}</p>
+          <p style="margin-top: 15px;">Riceverai una email di conferma.</p>
+          <p style="margin-top: 10px; color: #4CAF50; font-weight: 600;">Il tuo posto è confermato!</p>
         `;
       } else {
         title.textContent = '⏳ Inserito in Lista d\'Attesa';
         message.innerHTML = `
           <p><strong>${result.turno_nome}</strong></p>
           <p>Posizione in lista: <strong>${result.posizione_lista}</strong></p>
-          <p>Ti contatteremo se si libera un posto.</p>
-          <p style="margin-top: 15px; font-size: 0.95rem;">Riceverai una email di conferma.</p>
+          <p style="margin-top: 15px;">Ti contatteremo se si libera un posto.</p>
+          <p style="font-size: 0.95rem;">Riceverai una email di conferma.</p>
         `;
       }
       
       modal.style.display = 'flex';
     }
     
-    // Utility
     function formatDate(dateString) {
       const date = new Date(dateString + 'T00:00:00');
       return date.toLocaleDateString('it-IT', {
@@ -387,7 +425,6 @@
       window.location.href = 'index.html';
     };
     
-    // Avvia
     init();
   </script>
 </body>

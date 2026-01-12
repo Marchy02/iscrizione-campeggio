@@ -1,30 +1,32 @@
 -- ============================================
--- FUNZIONI RPC - Sistema Campeggi
+-- FUNZIONI RPC CORRETTE - Sistema Campeggi v2.1
 -- ============================================
--- Funzioni chiamabili dal frontend via supabase.rpc()
+-- Fix: NESSUN parametro con DEFAULT
+-- Fix: Parametri nullable gestiti con COALESCE
 -- ============================================
 
 -- ============================================
 -- FUNZIONE RPC: Nuova iscrizione atomica
 -- ============================================
 CREATE OR REPLACE FUNCTION crea_iscrizione(
+  -- Parametri SENZA DEFAULT (tutti obbligatori o nullable)
   p_turno_id BIGINT,
   p_nome TEXT,
   p_cognome TEXT,
   p_data_nascita DATE,
-  p_sesso TEXT,
-  p_email TEXT,
-  p_telefono TEXT,
+  p_luogo_nascita TEXT,
   p_indirizzo TEXT,
   p_citta TEXT,
-  p_cap TEXT,
-  p_allergie TEXT DEFAULT NULL,
-  p_farmaci TEXT DEFAULT NULL,
-  p_note_mediche TEXT DEFAULT NULL,
-  p_contatto_emergenza_nome TEXT,
-  p_contatto_emergenza_telefono TEXT,
-  p_consenso_privacy BOOLEAN,
-  p_consenso_immagini BOOLEAN DEFAULT false
+  p_e_maggiorenne BOOLEAN,
+  p_nome_genitore TEXT,
+  p_cognome_genitore TEXT,
+  p_email TEXT,
+  p_telefono TEXT,
+  p_ha_allergie BOOLEAN,
+  p_descrizione_allergie TEXT,
+  p_ha_medicinali BOOLEAN,
+  p_descrizione_medicinali TEXT,
+  p_consenso_gdpr BOOLEAN
 )
 RETURNS JSON AS $$
 DECLARE
@@ -35,14 +37,15 @@ DECLARE
   v_iscrizione_id BIGINT;
   v_email_type TEXT;
 BEGIN
-  -- Validazioni input
-  IF p_consenso_privacy IS NOT TRUE THEN
+  -- Validazione consenso GDPR
+  IF p_consenso_gdpr IS NOT TRUE THEN
     RETURN json_build_object(
       'success', false,
-      'error', 'Il consenso privacy è obbligatorio'
+      'error', 'Il consenso GDPR è obbligatorio'
     );
   END IF;
   
+  -- Validazione turno
   IF p_turno_id IS NULL THEN
     RETURN json_build_object(
       'success', false,
@@ -50,11 +53,35 @@ BEGIN
     );
   END IF;
   
-  -- Verifica turno esiste ed è attivo
+  -- Validazione dati genitore se minorenne
+  IF p_e_maggiorenne = false AND (p_nome_genitore IS NULL OR p_cognome_genitore IS NULL) THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'Dati genitore obbligatori per minorenni'
+    );
+  END IF;
+  
+  -- Validazione allergie
+  IF p_ha_allergie = true AND (p_descrizione_allergie IS NULL OR TRIM(p_descrizione_allergie) = '') THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'Descrizione allergie obbligatoria se presenti'
+    );
+  END IF;
+  
+  -- Validazione medicinali
+  IF p_ha_medicinali = true AND (p_descrizione_medicinali IS NULL OR TRIM(p_descrizione_medicinali) = '') THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'Descrizione medicinali obbligatoria se presenti'
+    );
+  END IF;
+  
+  -- Verifica turno esiste ed è attivo (con lock)
   SELECT * INTO v_turno
   FROM turni
   WHERE id = p_turno_id AND attivo = true
-  FOR UPDATE; -- Lock per evitare race condition
+  FOR UPDATE;
   
   IF NOT FOUND THEN
     RETURN json_build_object(
@@ -73,7 +100,6 @@ BEGIN
     v_email_type := 'CONFERMA';
   ELSE
     v_status := 'WAITING_LIST';
-    -- Calcola prossima posizione in lista
     SELECT COALESCE(MAX(posizione_lista), 0) + 1
     INTO v_posizione_lista
     FROM iscrizioni
@@ -87,41 +113,41 @@ BEGIN
     nome,
     cognome,
     data_nascita,
-    sesso,
-    email,
-    telefono,
+    luogo_nascita,
     indirizzo,
     citta,
-    cap,
-    allergie,
-    farmaci,
-    note_mediche,
-    contatto_emergenza_nome,
-    contatto_emergenza_telefono,
+    e_maggiorenne,
+    nome_genitore,
+    cognome_genitore,
+    email,
+    telefono,
+    ha_allergie,
+    descrizione_allergie,
+    ha_medicinali,
+    descrizione_medicinali,
+    consenso_gdpr,
     status,
-    posizione_lista,
-    consenso_privacy,
-    consenso_immagini
+    posizione_lista
   ) VALUES (
     p_turno_id,
     TRIM(p_nome),
     TRIM(p_cognome),
     p_data_nascita,
-    p_sesso,
-    LOWER(TRIM(p_email)),
-    TRIM(p_telefono),
+    TRIM(p_luogo_nascita),
     TRIM(p_indirizzo),
     TRIM(p_citta),
-    TRIM(p_cap),
-    NULLIF(TRIM(p_allergie), ''),
-    NULLIF(TRIM(p_farmaci), ''),
-    NULLIF(TRIM(p_note_mediche), ''),
-    TRIM(p_contatto_emergenza_nome),
-    TRIM(p_contatto_emergenza_telefono),
+    p_e_maggiorenne,
+    CASE WHEN p_e_maggiorenne = false THEN TRIM(p_nome_genitore) ELSE NULL END,
+    CASE WHEN p_e_maggiorenne = false THEN TRIM(p_cognome_genitore) ELSE NULL END,
+    LOWER(TRIM(p_email)),
+    TRIM(p_telefono),
+    COALESCE(p_ha_allergie, false),
+    CASE WHEN COALESCE(p_ha_allergie, false) = true THEN TRIM(p_descrizione_allergie) ELSE NULL END,
+    COALESCE(p_ha_medicinali, false),
+    CASE WHEN COALESCE(p_ha_medicinali, false) = true THEN TRIM(p_descrizione_medicinali) ELSE NULL END,
+    p_consenso_gdpr,
     v_status,
-    v_posizione_lista,
-    p_consenso_privacy,
-    p_consenso_immagini
+    v_posizione_lista
   ) RETURNING id INTO v_iscrizione_id;
   
   -- Accoda email
@@ -158,7 +184,6 @@ DECLARE
   v_iscrizione RECORD;
   v_promosso RECORD;
 BEGIN
-  -- Recupera iscrizione
   SELECT * INTO v_iscrizione
   FROM iscrizioni
   WHERE id = p_iscrizione_id;
@@ -167,14 +192,11 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Iscrizione non trovata');
   END IF;
   
-  -- Se era confermata, prova a promuovere dalla lista
   IF v_iscrizione.status = 'CONFIRMED' THEN
-    -- Marca come cancellata
     UPDATE iscrizioni
     SET status = 'CANCELLED'
     WHERE id = p_iscrizione_id;
     
-    -- Promuovi dalla lista
     SELECT * INTO v_promosso
     FROM promuovi_da_lista_attesa(v_iscrizione.turno_id)
     LIMIT 1;
@@ -191,13 +213,11 @@ BEGIN
       );
     END IF;
   ELSE
-    -- Marca come cancellata
     UPDATE iscrizioni
     SET status = 'CANCELLED',
         posizione_lista = NULL
     WHERE id = p_iscrizione_id;
     
-    -- Riordina lista
     PERFORM riordina_lista_attesa(v_iscrizione.turno_id);
   END IF;
   
@@ -216,9 +236,7 @@ CREATE OR REPLACE FUNCTION promuovi_iscrizione(p_iscrizione_id BIGINT)
 RETURNS JSON AS $$
 DECLARE
   v_iscrizione RECORD;
-  v_posti_disponibili INTEGER;
 BEGIN
-  -- Recupera iscrizione
   SELECT i.*, t.posti_totali - t.posti_occupati as posti_liberi
   INTO v_iscrizione
   FROM iscrizioni i
@@ -237,17 +255,14 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Nessun posto disponibile');
   END IF;
   
-  -- Promuovi
   UPDATE iscrizioni
   SET status = 'CONFIRMED',
       posizione_lista = NULL
   WHERE id = p_iscrizione_id;
   
-  -- Accoda email
   INSERT INTO email_queue (iscrizione_id, email_to, email_type)
   VALUES (p_iscrizione_id, v_iscrizione.email, 'PROMOZIONE');
   
-  -- Riordina lista
   PERFORM riordina_lista_attesa(v_iscrizione.turno_id);
   
   RETURN json_build_object('success', true);
@@ -282,9 +297,11 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
--- COMMENTI DOCUMENTAZIONE
+-- GRANT PERMESSI
 -- ============================================
-COMMENT ON FUNCTION crea_iscrizione IS 'Crea iscrizione atomica con gestione automatica status e lista attesa';
-COMMENT ON FUNCTION cancella_iscrizione IS 'Cancella iscrizione e promuove automaticamente dalla lista [ADMIN]';
-COMMENT ON FUNCTION promuovi_iscrizione IS 'Promuove manualmente iscrizione dalla lista attesa [ADMIN]';
-COMMENT ON FUNCTION get_turno_stats IS 'Ritorna statistiche turno per dashboard admin';
+GRANT EXECUTE ON FUNCTION crea_iscrizione TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION cancella_iscrizione TO authenticated;
+GRANT EXECUTE ON FUNCTION promuovi_iscrizione TO authenticated;
+GRANT EXECUTE ON FUNCTION get_turno_stats TO authenticated;
+GRANT EXECUTE ON FUNCTION promuovi_da_lista_attesa TO authenticated;
+GRANT EXECUTE ON FUNCTION riordina_lista_attesa TO authenticated;

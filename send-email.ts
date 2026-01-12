@@ -1,36 +1,51 @@
 // ============================================
-// EDGE FUNCTION: send-email
+// EDGE FUNCTION: send-email CORRETTA
 // ============================================
-// Deploy su Supabase Edge Functions
-// Gestisce invio email asincrone via Resend
+// Fix: Tipi TypeScript corretti
+// Fix: Error handling con type guard
 // ============================================
+
+/// <reference types="https://deno.land/x/types/index.d.ts" />
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'Campeggi Parrocchia <noreply@tuodominio.com>' // ⚠️ Sostituisci con il tuo
+const FROM_EMAIL = 'Campeggi Parrocchia <noreply@tuodominio.com>'
 
-serve(async (req) => {
-  // CORS headers
+interface EmailRequest {
+  to: string;
+  subject?: string;
+  type: 'CONFERMA' | 'LISTA_ATTESA' | 'PROMOZIONE';
+  data: EmailData;
+}
+
+interface EmailData {
+  nome: string;
+  cognome: string;
+  turno_nome: string;
+  date: string;
+  luogo: string;
+  posizione?: number;
+}
+
+serve(async (req: Request) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   }
 
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { to, subject, type, data } = await req.json()
+    const body = await req.json() as EmailRequest
+    const { to, subject, type, data } = body
 
-    // Validazione input
     if (!to || !type || !data) {
       throw new Error('Parametri mancanti: to, type, data richiesti')
     }
 
-    // Genera HTML email in base al tipo
     let htmlContent = ''
 
     switch(type) {
@@ -50,7 +65,6 @@ serve(async (req) => {
         throw new Error(`Tipo email non valido: ${type}`)
     }
 
-    // Invia email via Resend
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -82,10 +96,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error sending email:', error)
     
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: errorMessage
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -95,11 +111,7 @@ serve(async (req) => {
   }
 })
 
-// ============================================
-// TEMPLATE EMAIL
-// ============================================
-
-function getDefaultSubject(type) {
+function getDefaultSubject(type: string): string {
   switch(type) {
     case 'CONFERMA':
       return '🎉 Iscrizione Confermata - Campeggio Estivo'
@@ -112,7 +124,7 @@ function getDefaultSubject(type) {
   }
 }
 
-function generateConfirmaEmail(data) {
+function generateConfirmaEmail(data: EmailData): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -165,7 +177,7 @@ function generateConfirmaEmail(data) {
   `
 }
 
-function generateListaAttesaEmail(data) {
+function generateListaAttesaEmail(data: EmailData): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -195,7 +207,7 @@ function generateListaAttesaEmail(data) {
             <p style="margin: 5px 0;"><strong>Turno:</strong> ${data.turno_nome}</p>
             <p style="margin: 5px 0;"><strong>📅 Date:</strong> ${data.date}</p>
             <p style="margin: 5px 0;"><strong>📍 Luogo:</strong> ${data.luogo}</p>
-            <p style="margin: 15px 0 5px 0; font-size: 18px;"><strong>Posizione in lista:</strong> <span style="color: #FF9800; font-size: 24px;">${data.posizione}</span></p>
+            <p style="margin: 15px 0 5px 0; font-size: 18px;"><strong>Posizione in lista:</strong> <span style="color: #FF9800; font-size: 24px;">${data.posizione || 'N/A'}</span></p>
           </div>
           
           <p style="background: #FFF3E0; padding: 15px; border-radius: 10px; color: #E65100; text-align: center;">
@@ -219,7 +231,7 @@ function generateListaAttesaEmail(data) {
   `
 }
 
-function generatePromozioneEmail(data) {
+function generatePromozioneEmail(data: EmailData): string {
   return `
     <!DOCTYPE html>
     <html>
