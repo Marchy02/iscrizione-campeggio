@@ -277,6 +277,8 @@
           .select('*')
           .eq('turno_id', currentTurnoId)
           .in('status', ['CONFIRMED', 'WAITING_LIST'])
+          .order('status', { ascending: true })
+          .order('posizione_lista', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: true });
         
         if (iscrizioniError) throw iscrizioniError;
