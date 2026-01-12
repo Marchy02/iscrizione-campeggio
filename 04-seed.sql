@@ -8,9 +8,9 @@
 -- INSERISCI TURNI DI ESEMPIO
 -- ============================================
 INSERT INTO turni (nome, luogo, data_inizio, data_fine, posti_totali, attivo) VALUES
-  ('Turno Bambini 6-10 anni', 'Rifugio Monte Baldo', '2025-06-15', '2025-06-22', 30, true),
-  ('Turno Ragazzi 11-14 anni', 'Rifugio Monte Baldo', '2025-06-29', '2025-07-06', 30, true),
-  ('Turno Adolescenti 15-17 anni', 'Rifugio Monte Baldo', '2025-07-13', '2025-07-20', 30, true);
+  ('Primo Turno', 'Rifugio Monte Baldo', '2025-06-15', '2025-06-22', 30, true),
+  ('Secondo Turno', 'Rifugio Monte Baldo', '2025-06-29', '2025-07-06', 30, true),
+  ('Terzo Turno', 'Rifugio Monte Baldo', '2025-07-13', '2025-07-20', 30, true);
 
 -- ============================================
 -- NOTA: Le iscrizioni vengono create solo via RPC
