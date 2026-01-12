@@ -373,9 +373,24 @@
         // ========================================
         // 3. INSERISCI ISCRIZIONE
         // ========================================
-        const { error: inscriptionError } = await supabase
-          .from('iscrizioni')
-          .insert([formData]);
+        const { data, error } = await supabase.rpc('register_iscrizione', {
+          p_turno_id: formData.turno_id,
+          p_nome: formData.nome,
+          p_cognome: formData.cognome,
+          p_email: formData.email
+        });
+
+        if (error) {
+          console.error("Errore RPC:", error);
+          alert("Errore durante l'iscrizione");
+          return;
+        }
+
+        if (data.status === "CONFIRMED") {
+          alert("Iscrizione confermata!");
+        } else {
+          alert("Inserito in lista di attesa. Posizione: " + data.posizione);
+        }
 
         if (inscriptionError) {
           console.error('❌ Errore inserimento:', inscriptionError);
