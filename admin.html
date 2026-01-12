@@ -109,7 +109,7 @@
         if (session?.user) {
           await verificaAdmin(session.user);
         }
-        
+        setupConditionalFields();
         setupEventListeners();
         
       } catch (error) {
