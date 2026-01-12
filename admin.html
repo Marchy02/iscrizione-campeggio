@@ -84,94 +84,106 @@
   </div>
 
   <script type="module">
-    // ============================================
-    // ADMIN.HTML - Script Inline
-    // ============================================
-    
     const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZW9pdndodWFmbXFwb3duYmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxNDI3OTgsImV4cCI6MjA4MzcxODc5OH0.n5wq8hZMFdoOnSDw7y14pT_cOeL-zUShHH2OuDavizQ';
-    
+
     let supabase;
     let currentUser = null;
     let currentTurnoId = null;
-    
+
     // ============================================
-    // INIZIALIZZAZIONE
+    // UTILITY
+    // ============================================
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString + 'T00:00:00');
+      return date.toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+
+    function mostraErrore(msg) {
+      alert('❌ ' + msg);
+    }
+
+    // ============================================
+    // INIT
     // ============================================
     async function init() {
       try {
         const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+
         // Verifica sessione
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (session?.user) {
           await verificaAdmin(session.user);
         }
-        setupConditionalFields();
         setupEventListeners();
-        
+
       } catch (error) {
-        console.error('Errore init:', error);
+        console.error('❌ Errore init:', error);
         mostraErrore('Errore di inizializzazione');
       }
     }
-    
+
     // ============================================
     // VERIFICA ADMIN
     // ============================================
     async function verificaAdmin(user) {
       try {
-        // Verifica role in user_metadata
-        const isAdmin = user.user_metadata?.role === 'admin' || 
-                       user.role === 'admin';
-        
+        const isAdmin = user.user_metadata?.role === 'admin' || user.role === 'admin';
+
         if (isAdmin) {
           currentUser = user;
           document.getElementById('login-section').style.display = 'none';
           document.getElementById('admin-section').style.display = 'block';
           document.getElementById('user-info').style.display = 'flex';
           document.getElementById('user-email').textContent = user.email;
-          
+
           await caricaTurni();
         } else {
           throw new Error('Accesso non autorizzato');
         }
-        
+
       } catch (error) {
-        console.error('Errore verifica admin:', error);
+        console.error('❌ Errore verifica admin:', error);
         await supabase.auth.signOut();
         mostraErrore('Accesso non autorizzato');
       }
     }
-    
+
     // ============================================
-    // SETUP EVENT LISTENERS
+    // EVENT LISTENERS
     // ============================================
     function setupEventListeners() {
-      // Login form
       document.getElementById('login-form').addEventListener('submit', handleLogin);
-      
-      // Logout
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
-      
-      // Cambio turno
       document.getElementById('turno-select').addEventListener('change', (e) => {
         currentTurnoId = parseInt(e.target.value);
         if (currentTurnoId) {
           caricaDatiTurno();
         }
       });
-      
-      // Refresh
       document.getElementById('refresh-btn').addEventListener('click', () => {
         if (currentTurnoId) {
           caricaDatiTurno();
         }
       });
-      
-      // Tabs
+
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const tab = e.target.dataset.tab;
@@ -179,38 +191,38 @@
         });
       });
     }
-    
+
     // ============================================
-    // HANDLE LOGIN
+    // LOGIN
     // ============================================
     async function handleLogin(e) {
       e.preventDefault();
-      
+
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
       const errorDiv = document.getElementById('login-error');
-      
+
       errorDiv.style.display = 'none';
-      
+
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
-        
+
         if (error) throw error;
-        
+
         await verificaAdmin(data.user);
-        
+
       } catch (error) {
-        console.error('Errore login:', error);
+        console.error('❌ Errore login:', error);
         errorDiv.textContent = error.message || 'Credenziali non valide';
         errorDiv.style.display = 'block';
       }
     }
-    
+
     // ============================================
-    // HANDLE LOGOUT
+    // LOGOUT
     // ============================================
     async function handleLogout() {
       await supabase.auth.signOut();
@@ -220,7 +232,7 @@
       document.getElementById('login-section').style.display = 'flex';
       document.getElementById('user-info').style.display = 'none';
     }
-    
+
     // ============================================
     // CARICA TURNI
     // ============================================
@@ -230,47 +242,47 @@
           .from('turni')
           .select('*')
           .order('data_inizio', { ascending: true });
-        
+
         if (error) throw error;
-        
+
         const select = document.getElementById('turno-select');
         select.innerHTML = '<option value="">-- Seleziona turno --</option>';
-        
+
         turni.forEach(turno => {
           const option = document.createElement('option');
           option.value = turno.id;
-          option.textContent = `${turno.nome} (${formatDate(turno.data_inizio)})`;
+          option.textContent = `${escapeHtml(turno.nome)} (${formatDate(turno.data_inizio)})`;
           select.appendChild(option);
         });
-        
-        // Seleziona primo turno automaticamente
+
+        // Seleziona primo turno
         if (turni.length > 0) {
           currentTurnoId = turni[0].id;
           select.value = currentTurnoId;
           await caricaDatiTurno();
         }
-        
+
       } catch (error) {
-        console.error('Errore caricamento turni:', error);
+        console.error('❌ Errore caricamento turni:', error);
         mostraErrore('Errore caricamento turni');
       }
     }
-    
+
     // ============================================
     // CARICA DATI TURNO
     // ============================================
     async function caricaDatiTurno() {
       if (!currentTurnoId) return;
-      
+
       try {
         // Carica statistiche
         const { data: stats, error: statsError } = await supabase
           .rpc('get_turno_stats', { p_turno_id: currentTurnoId });
-        
+
         if (statsError) throw statsError;
-        
-        mostraStatistiche(stats);
-        
+
+        mostraStatistiche(stats[0]);
+
         // Carica iscrizioni
         const { data: iscrizioni, error: iscrizioniError } = await supabase
           .from('iscrizioni')
@@ -278,51 +290,56 @@
           .eq('turno_id', currentTurnoId)
           .in('status', ['CONFIRMED', 'WAITING_LIST'])
           .order('status', { ascending: true })
-          .order('posizione_lista', { ascending: true, nullsFirst: false })
+          .order('posizione_lista', { ascending: true, nullsFirst: true })
           .order('created_at', { ascending: true });
-        
+
         if (iscrizioniError) throw iscrizioniError;
-        
+
         mostraIscrizioni(iscrizioni);
-        
+
       } catch (error) {
-        console.error('Errore caricamento dati:', error);
+        console.error('❌ Errore caricamento dati:', error);
         mostraErrore('Errore caricamento dati: ' + error.message);
       }
     }
-    
+
     // ============================================
     // MOSTRA STATISTICHE
     // ============================================
     function mostraStatistiche(stats) {
       const container = document.getElementById('stats-section');
+      if (!stats) {
+        container.innerHTML = '<p>Nessun dato disponibile</p>';
+        return;
+      }
+
       container.innerHTML = `
         <div class="stat-card">
           <h4>Posti Totali</h4>
-          <div class="stat-value">${stats.posti_totali}</div>
+          <div class="stat-value">${stats.posti_totali || 0}</div>
         </div>
         <div class="stat-card">
           <h4>Confermati</h4>
-          <div class="stat-value">${stats.confermati}</div>
+          <div class="stat-value">${stats.confermati || 0}</div>
         </div>
         <div class="stat-card">
           <h4>Lista d'Attesa</h4>
-          <div class="stat-value">${stats.lista_attesa}</div>
+          <div class="stat-value">${stats.lista_attesa || 0}</div>
         </div>
         <div class="stat-card">
           <h4>Posti Disponibili</h4>
-          <div class="stat-value">${stats.posti_disponibili}</div>
+          <div class="stat-value">${stats.posti_disponibili || 0}</div>
         </div>
       `;
     }
-    
+
     // ============================================
     // MOSTRA ISCRIZIONI
     // ============================================
     function mostraIscrizioni(iscrizioni) {
       const confermati = iscrizioni.filter(i => i.status === 'CONFIRMED');
       const attesa = iscrizioni.filter(i => i.status === 'WAITING_LIST');
-      
+
       // Confermati
       const confermatiContainer = document.getElementById('confermati-container');
       if (confermati.length === 0) {
@@ -330,7 +347,7 @@
       } else {
         confermatiContainer.innerHTML = confermati.map(i => creaIscrizioneCard(i)).join('');
       }
-      
+
       // Lista d'attesa
       const attesaContainer = document.getElementById('attesa-container');
       if (attesa.length === 0) {
@@ -339,97 +356,98 @@
         attesaContainer.innerHTML = attesa.map(i => creaIscrizioneCard(i)).join('');
       }
     }
-    
+
     // ============================================
     // CREA CARD ISCRIZIONE
     // ============================================
     function creaIscrizioneCard(iscrizione) {
       const isAttesa = iscrizione.status === 'WAITING_LIST';
-      
+
       return `
         <div class="iscrizione-item">
           <div class="iscrizione-header">
             <div>
               <div class="iscrizione-nome">
-                ${iscrizione.nome} ${iscrizione.cognome}
+                ${escapeHtml(iscrizione.nome)} ${escapeHtml(iscrizione.cognome)}
                 ${isAttesa ? `<span class="posizione-badge">Pos. ${iscrizione.posizione_lista}</span>` : ''}
               </div>
             </div>
             <div class="iscrizione-actions">
               ${isAttesa ? `<button class="btn-success" onclick="window.promuoviIscrizione(${iscrizione.id})">✓ Promuovi</button>` : ''}
-              <button class="btn-danger" onclick="window.cancellaIscrizione(${iscrizione.id})">✗ Cancella</button>
+              <button class="btn-danger" onclick="window.cancellaIscrizione(${iscrizione.id})">✕ Cancella</button>
             </div>
           </div>
           <div class="iscrizione-details">
             <div class="iscrizione-detail">
-              <strong>Email:</strong> ${iscrizione.email}
+              <strong>Email:</strong> ${escapeHtml(iscrizione.email)}
             </div>
             <div class="iscrizione-detail">
-              <strong>Tel:</strong> ${iscrizione.telefono}
+              <strong>Tel:</strong> ${escapeHtml(iscrizione.telefono)}
             </div>
             <div class="iscrizione-detail">
               <strong>Nato il:</strong> ${formatDate(iscrizione.data_nascita)}
             </div>
             <div class="iscrizione-detail">
-              <strong>Città:</strong> ${iscrizione.citta}
+              <strong>Città:</strong> ${escapeHtml(iscrizione.citta)}
             </div>
-            ${iscrizione.allergie ? `<div class="iscrizione-detail"><strong>Allergie:</strong> ${iscrizione.allergie}</div>` : ''}
+            ${iscrizione.descrizione_allergie ? `<div class="iscrizione-detail"><strong>Allergie:</strong> ${escapeHtml(iscrizione.descrizione_allergie)}</div>` : ''}
+            ${iscrizione.descrizione_medicinali ? `<div class="iscrizione-detail"><strong>Medicinali:</strong> ${escapeHtml(iscrizione.descrizione_medicinali)}</div>` : ''}
           </div>
         </div>
       `;
     }
-    
+
     // ============================================
     // PROMUOVI ISCRIZIONE
     // ============================================
     window.promuoviIscrizione = async function(id) {
       if (!confirm('Confermi promozione dalla lista d\'attesa?')) return;
-      
+
       try {
         const { data, error } = await supabase.rpc('promuovi_iscrizione', {
           p_iscrizione_id: id
         });
-        
+
         if (error) throw error;
-        if (!data.success) throw new Error(data.error);
-        
+        if (!data[0] || !data[0].success) throw new Error(data[0]?.error_message || 'Errore sconosciuto');
+
         alert('✓ Iscrizione promossa con successo!');
         await caricaDatiTurno();
-        
+
       } catch (error) {
-        console.error('Errore promozione:', error);
+        console.error('❌ Errore promozione:', error);
         alert('Errore: ' + error.message);
       }
     };
-    
+
     // ============================================
     // CANCELLA ISCRIZIONE
     // ============================================
     window.cancellaIscrizione = async function(id) {
       if (!confirm('Confermi cancellazione iscrizione?')) return;
-      
+
       try {
         const { data, error } = await supabase.rpc('cancella_iscrizione', {
           p_iscrizione_id: id
         });
-        
+
         if (error) throw error;
-        if (!data.success) throw new Error(data.error);
-        
-        if (data.promosso) {
-          alert(`✓ Iscrizione cancellata!\n\nPromosso dalla lista:\n${data.promosso.nome} ${data.promosso.cognome}\n${data.promosso.email}`);
+        if (!data[0] || !data[0].success) throw new Error(data[0]?.error_message || 'Errore sconosciuto');
+
+        if (data[0].promosso_id) {
+          alert(`✓ Iscrizione cancellata!\n\nPromosso dalla lista:\n${escapeHtml(data[0].promosso_nome)} ${escapeHtml(data[0].promosso_cognome)}\n${escapeHtml(data[0].promosso_email)}`);
         } else {
           alert('✓ Iscrizione cancellata!');
         }
-        
+
         await caricaDatiTurno();
-        
+
       } catch (error) {
-        console.error('Errore cancellazione:', error);
+        console.error('❌ Errore cancellazione:', error);
         alert('Errore: ' + error.message);
       }
     };
-    
+
     // ============================================
     // SWITCH TAB
     // ============================================
@@ -437,28 +455,12 @@
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tab);
       });
-      
+
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.toggle('active', content.id === `${tab}-tab`);
       });
     }
-    
-    // ============================================
-    // UTILITY
-    // ============================================
-    function formatDate(dateString) {
-      const date = new Date(dateString + 'T00:00:00');
-      return date.toLocaleDateString('it-IT', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-    }
-    
-    function mostraErrore(msg) {
-      alert(msg);
-    }
-    
+
     // Avvia
     init();
   </script>
