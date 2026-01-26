@@ -588,8 +588,7 @@
           return;
         }
 
-        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { createClient } = await import('https://unpkg.com/@supabase/supabase-js@2/+esm');
 
         await caricaTurno();
         document.getElementById('iscrizione-form').addEventListener('submit', handleSubmit);

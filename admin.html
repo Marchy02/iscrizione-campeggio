@@ -123,7 +123,7 @@
     // ============================================
     async function init() {
       try {
-        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const { createClient } = await import('https://unpkg.com/@supabase/supabase-js@2/+esm');
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Verifica sessione

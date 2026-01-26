@@ -1,6 +1,6 @@
 // ============================================
-// APP.JS - Homepage BULLETPROOF
-// Sistema Campeggi v2.1
+// APP.JS - Homepage BULLETPROOF v2.3
+// Sistema Campeggi - CDN FIX
 // ============================================
 
 const SUPABASE_URL = 'https://kneoivwhuafmqpownblh.supabase.co';
@@ -41,6 +41,7 @@ function mostraErrore(msg) {
       errorDiv.style.display = 'none';
     }, 5000);
   }
+  console.error('❌ Errore:', msg);
 }
 
 // ============================================
@@ -59,6 +60,8 @@ async function caricaTurni() {
   turniContainer.innerHTML = '';
 
   try {
+    console.log('🔍 Caricamento turni da Supabase...');
+
     // Query solo turni attivi, ordinati per data
     const { data: turni, error } = await supabase
       .from('turni')
@@ -66,7 +69,10 @@ async function caricaTurni() {
       .eq('attivo', true)
       .order('data_inizio', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Errore Supabase:', error);
+      throw error;
+    }
 
     if (loadingDiv) loadingDiv.style.display = 'none';
 
@@ -155,11 +161,12 @@ async function init() {
   try {
     console.log('🚀 Inizializzazione sistema...');
 
-    // Import Supabase client
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    // Import Supabase client - USA UNPKG INVECE DI JSDELIVR
+    const { createClient } = await import('https://unpkg.com/@supabase/supabase-js@2/+esm');
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     console.log('✅ Supabase connesso');
+    console.log('📡 URL:', SUPABASE_URL);
 
     // Carica turni
     await caricaTurni();
@@ -170,5 +177,9 @@ async function init() {
   }
 }
 
-// Avvia app
-init();
+// Avvia app quando DOM è pronto
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
